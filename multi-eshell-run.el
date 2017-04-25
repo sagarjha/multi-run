@@ -19,8 +19,11 @@
     (setq names (cdr names))
     (setq cnt (+ 1 cnt))))
 
-(defun run (cmd)
-  (run-on-multiple-eshell-terminals cmd eshell-list))
+(defun run (&rest cmd)
+  (mapc
+   (lambda (command) (run-on-multiple-eshell-terminals command eshell-list))
+   cmd)
+  nil)
 
 (defun run-with-delay (delay cmd)
   (run-on-multiple-eshell-terminals cmd eshell-list delay))
