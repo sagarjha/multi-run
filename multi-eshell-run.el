@@ -12,12 +12,18 @@
   "Run a command on multiple eshell terminals - useful for ssh"
   (when (not delay)
     (setq delay 0))
-  (setq cnt 0)
+  (setq delay-cnt 0)
+  (setq loop-cnt 1)
+  (setq evaled-command command)
   (while names
-    (run-at-time (concat (number-to-string (* cnt delay)) " sec") nil 
-		 'run-on-eshell-terminal command (car names))
+    (when (functionp command)
+      (setq evaled-command (funcall command loop-cnt)
+	    ))
+    (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec") nil 
+		 'run-on-eshell-terminal evaled-command (car names))
     (setq names (cdr names))
-    (setq cnt (+ 1 cnt))))
+    (setq delay-cnt (+ 1 delay-cnt))
+    (setq loop-cnt (+ 1 loop-cnt))))
 
 (defun run (&rest cmd)
   (mapc
