@@ -25,9 +25,32 @@
     (setq delay-cnt (+ 1 delay-cnt))
     (setq loop-cnt (+ 1 loop-cnt))))
 
+(defun in-one-call ()
+  (delete-other-windows)
+  (split-window-horizontally)
+  (other-window 1)
+  (eshell 1)
+  (split-window-vertically)
+  (other-window 1)
+  (eshell 2))
+
+(in-one-call)
+
+(setq window-batch 5)
+
 (defun open-eshell-terminals (num-terminals)
+  (delete-other-windows)
+  (dotimes (i (+ 1 (/ (+ -1 num-terminals) window-batch)))
+    (split-window-horizontally)
+    (balance-windows))
   (dotimes (i num-terminals)
-    (eshell (+ i 1))))
+    (if (= (% i window-batch) 0)
+	(other-window 1)
+      (progn (split-window-vertically)
+	     (balance-windows)
+	     (other-window 1)))
+    (eshell (+ i 1)))
+  (other-window 1))
 
 (defun run (&rest cmd)
   (mapc
