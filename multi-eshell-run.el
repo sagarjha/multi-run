@@ -25,17 +25,6 @@
     (setq delay-cnt (+ 1 delay-cnt))
     (setq loop-cnt (+ 1 loop-cnt))))
 
-(defun in-one-call ()
-  (delete-other-windows)
-  (split-window-horizontally)
-  (other-window 1)
-  (eshell 1)
-  (split-window-vertically)
-  (other-window 1)
-  (eshell 2))
-
-(in-one-call)
-
 (setq window-batch 5)
 
 (defun open-eshell-terminals (num-terminals)
