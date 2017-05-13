@@ -25,6 +25,10 @@
     (setq delay-cnt (+ 1 delay-cnt))
     (setq loop-cnt (+ 1 loop-cnt))))
 
+(defun open-eshell-terminals (num-terminals)
+  (dotimes (i num-terminals)
+    (eshell (+ i 1))))
+
 (defun run (&rest cmd)
   (mapc
    (lambda (command) (run-on-multiple-eshell-terminals command eshell-list))
