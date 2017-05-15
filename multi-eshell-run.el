@@ -38,8 +38,7 @@
     (eshell (+ i 1)))
   (other-window 1)
   (setq eshell-list (number-sequence 1 num-terminals))
-  (print (concat "Preemptively setting the eshell-list to " (prin1-to-string eshell-list)))
-  nil)
+  (concat "Preemptively setting the eshell-list to " (prin1-to-string eshell-list)))
 
 (defun run (&rest cmd)
   (when (not (boundp (quote eshell-list)))
@@ -55,11 +54,13 @@
   (run-on-multiple-eshell-terminals cmd eshell-list delay))
 
 ;; convenience function for ssh'ing to the terminals
-(defun run-ssh ()
+(defun run-ssh (&optional eshell-num)
   (when (not (boundp (quote eshell-list)))
     (error "Define the variable eshell-list on which you want to run the command on. e.g. (list 1 2 3)"))
   (when (not (boundp (quote nodes-list)))
     (error "Define the variable nodes-list to be the list of ip-addrs e.g. (list \"128.84.139.10\" \"128.84.139.11\" \"128.84.139.12\")"))
-  (run-on-multiple-eshell-terminals (lambda (x) (concat "ssh " (elt nodes-list (- x 1)))) eshell-list))
+  (if eshell-num
+      (run-on-multiple-eshell-terminals (lambda (x) (concat "ssh " (elt nodes-list (- x 1)))) (list eshell-num))
+      (run-on-multiple-eshell-terminals (lambda (x) (concat "ssh " (elt nodes-list (- x 1)))) eshell-list)))
 
 (provide 'multi-eshell-run)
