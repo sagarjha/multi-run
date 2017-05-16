@@ -41,6 +41,7 @@
   (concat "Preemptively setting the eshell-list to " (prin1-to-string eshell-list)))
 
 (defun run (&rest cmd)
+  (interactive)
   (when (not (boundp (quote eshell-list)))
     (error "Define the variable eshell-list on which you want to run the command on. e.g. (list 1 2 3)"))
   (mapc
