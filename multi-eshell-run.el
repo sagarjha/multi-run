@@ -20,13 +20,13 @@
     (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec") nil 
 		 'run-on-eshell-terminal evaled-command (car names))
     (setq names (cdr names))
-    (setq delay-cnt (+ 1 delay-cnt))))
+    (setq delay-cnt (1+ delay-cnt))))
 
 (setq eshell-window-batch 5)
 
 (defun configure-eshell-terminals (num-terminals)
   (delete-other-windows)
-  (dotimes (i (+ 1 (/ (+ -1 num-terminals) eshell-window-batch)))
+  (dotimes (i (1+ (/ (+ -1 num-terminals) eshell-window-batch)))
     (split-window-horizontally)
     (balance-windows))
   (dotimes (i num-terminals)
@@ -53,6 +53,18 @@
   (when (not (boundp (quote eshell-list)))
     (error "Define the variable eshell-list on which you want to run the command on. e.g. (list 1 2 3)"))
   (run-on-multiple-eshell-terminals cmd eshell-list delay))
+
+(defun run-loop (cmd &optional times delay)
+  (when (not times)
+    (setq times 1))
+  (when (not delay)
+    (setq delay 0))
+  (setq delay-cnt 0)
+  (dotimes (i times)
+    (progn 
+      (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
+		   nil '(lambda (cmd) (run cmd)) cmd)
+      (setq delay-cnt (1+ delay-cnt)))))
 
 ;; convenience function for ssh'ing to the terminals
 (defun run-ssh (&optional eshell-num)
