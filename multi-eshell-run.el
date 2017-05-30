@@ -74,6 +74,14 @@
     (error "Define the variable nodes-list to be the list of ip-addrs e.g. (list \"128.84.139.10\" \"128.84.139.11\" \"128.84.139.12\")"))
   (if eshell-num
       (run-on-multiple-eshell-terminals (lambda (x) (concat "ssh " (elt nodes-list (- x 1)))) (list eshell-num))
-      (run-on-multiple-eshell-terminals (lambda (x) (concat "ssh " (elt nodes-list (- x 1)))) eshell-list)))
+    (run-on-multiple-eshell-terminals (lambda (x) (concat "ssh " (elt nodes-list (- x 1)))) eshell-list)))
+
+(defun multi-kill (&optional eshell-num)
+  (when (not (boundp (quote eshell-list)))
+    (error "Define the variable eshell-list on which you want to run the command on. e.g. (list 1 2 3)"))
+  (if eshell-num
+      (kill-buffer (concat "*eshell*<" (number-to-string eshell-num) ">"))
+    (mapc (lambda (name) (kill-buffer (concat "*eshell*<" (number-to-string name) ">"))) eshell-list))
+  nil)
 
 (provide 'multi-eshell-run)
