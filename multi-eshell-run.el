@@ -22,9 +22,9 @@
     (setq names (cdr names))
     (setq delay-cnt (1+ delay-cnt))))
 
-(setq eshell-window-batch 5)
-
-(defun configure-eshell-terminals (num-terminals)
+(defun configure-eshell-terminals (num-terminals &optional eshell-window-batch)
+  (when (not eshell-window-batch)
+    (setq eshell-window-batch 5))
   (delete-other-windows)
   (dotimes (i (1+ (/ (+ -1 num-terminals) eshell-window-batch)))
     (split-window-horizontally)
