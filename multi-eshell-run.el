@@ -1,5 +1,7 @@
 (provide 'multi-eshell-run)
 
+(setq multi-run-timers (list))
+
 ;; run a command on a single eshell terminal
 (defun run-on-eshell-terminal (command name)
   (set-buffer (concat "*eshell*<" (number-to-string name) ">"))
@@ -17,8 +19,8 @@
   (while names
     (when (functionp command)
       (setq evaled-command (funcall command (car names))))
-    (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec") nil 
-		 'run-on-eshell-terminal evaled-command (car names))
+    (setq multi-run-timers (cons (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec") nil 
+					      'run-on-eshell-terminal evaled-command (car names)) multi-run-timers))
     (setq names (cdr names))
     (setq delay-cnt (1+ delay-cnt))))
 
@@ -35,7 +37,7 @@
       (progn (split-window-vertically)
 	     (balance-windows)
 	     (other-window 1)))
-    (eshell (+ i 1)))
+    (eshell (1+ i)))
   (other-window 1)
   (setq eshell-list (number-sequence 1 num-terminals))
   (concat "Preemptively setting the eshell-list to " (prin1-to-string eshell-list)))
@@ -62,8 +64,8 @@
   (setq delay-cnt 0)
   (dotimes (i times)
     (progn 
-      (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
-		   nil '(lambda (cmd) (run cmd)) cmd)
+      (setq multi-run-timers (cons (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
+						nil '(lambda (cmd) (run cmd)) cmd) multi-run-timers))
       (setq delay-cnt (1+ delay-cnt)))))
 
 ;; convenience function for ssh'ing to the terminals
@@ -83,5 +85,9 @@
       (kill-buffer (concat "*eshell*<" (number-to-string eshell-num) ">"))
     (mapc (lambda (name) (kill-buffer (concat "*eshell*<" (number-to-string name) ">"))) eshell-list))
   nil)
+
+(defun multi-run-kill-timers ()
+  (mapc (lambda (timer) (cancel-timer timer)) multi-run-timers)
+  "All timers canceled")
 
 (provide 'multi-eshell-run)
