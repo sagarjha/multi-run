@@ -1,6 +1,7 @@
 (provide 'multi-run)
 
 (setq mr-term "eshell")
+; (setq mr-term "ansi-term")
 (setq multi-run-timers (list))
 
 (defun mr-get-buffer-name (term-num)
@@ -10,6 +11,10 @@
 (defun mr-get-input-function ()
   (cond ((string= mr-term "eshell") 'eshell-send-input)
 	((string= mr-term "ansi-term") 'term-send-input)))
+
+(defun mr-get-new-input-point ()
+  (cond ((string= mr-term "eshell") eshell-last-output-end)
+	((string= mr-term "ansi-term") (process-mark (get-buffer-process (current-buffer))))))
 
 (defun mr-open-terminal (term-num)
   (cond ((string= mr-term "eshell")
@@ -28,9 +33,10 @@
 ;; run a command on a single terminal
 (defun mr-run-on-single-terminal (command term-num)
   (set-buffer (mr-get-buffer-name term-num))
-  (goto-char (point-max))
+  (goto-char (mr-get-new-input-point))
   (insert command)
-  (funcall (mr-get-input-function)))
+  (funcall (mr-get-input-function))
+  )
 
 ;; run a command on multiple terminals - useful for ssh
 (defun mr-run-on-terminals (command term-nums &optional delay)
