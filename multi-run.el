@@ -66,6 +66,7 @@
   (when (not window-batch)
     (setq window-batch 5))
   (delete-other-windows)
+  (split-window-vertically)
   (dotimes (i (1+ (/ (+ -1 num-terminals) window-batch)))
     (split-window-horizontally)
     (balance-windows))
@@ -77,6 +78,10 @@
 	     (other-window 1)))
     (mr-open-terminal (1+ i)))
   (other-window 1)
+  (other-window 1)
+  (delete-window)
+  (balance-windows)
+  (enlarge-window -500)
   (setq mr-terminals (number-sequence 1 num-terminals))
   (concat "Preemptively setting mr-terminals to " (prin1-to-string mr-terminals)))
 
