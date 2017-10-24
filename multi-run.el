@@ -1,5 +1,7 @@
 (provide 'multi-run)
 
+(require 'window-layout)
+
 (setq mr-term "eshell")
 ;; (setq mr-term "shell")
 ;; (setq mr-term "ansi-term")
@@ -44,8 +46,7 @@
   (set-buffer (mr-get-buffer-name term-num))
   (goto-char (mr-get-new-input-point))
   (insert command)
-  (funcall (mr-get-input-function))
-  )
+  (funcall (mr-get-input-function)))
 
 ;; run a command on multiple terminals - useful for ssh
 (defun mr-run-on-terminals (command term-nums &optional delay)
@@ -62,26 +63,62 @@
     (setq term-nums (cdr term-nums))
     (setq delay-cnt (1+ delay-cnt))))
 
+(defun mr-create-terminals (num-terminals)
+  (dotimes (i num-terminals)
+    (mr-open-terminal (1+ i))))
+
+(defun mr-make-symbols (num-terminals)
+  (defun mr-make-symbols-helper (cnt)
+    (when (<= cnt num-terminals)
+      (vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (mr-make-symbols-helper (1+ cnt)))))
+  (mr-make-symbols-helper 0))
+
+(defun mr-make-dict (num-terminals)
+  (defun mr-make-dict-helper (cnt)
+    (when (<= cnt num-terminals)
+      (cons (list :name (aref sym-vec cnt)
+		  :buffer (mr-get-buffer-name cnt))
+	    (mr-make-dict-helper (1+ cnt)))))
+  (mr-make-dict-helper 1))
+
 (defun mr-configure-terminals (num-terminals &optional window-batch)
   (when (not window-batch)
     (setq window-batch 5))
-  (delete-other-windows)
-  (split-window-vertically)
-  (dotimes (i (1+ (/ (+ -1 num-terminals) window-batch)))
-    (split-window-horizontally)
-    (balance-windows))
-  (dotimes (i num-terminals)
-    (if (= (% i window-batch) 0)
-	(other-window 1)
-      (progn (split-window-vertically)
-	     (balance-windows)
-	     (other-window 1)))
-    (mr-open-terminal (1+ i)))
-  (other-window 1)
-  (other-window 1)
-  (delete-window)
-  (balance-windows)
-  (enlarge-window -500)
+  (setq master-buffer-name (buffer-name))
+  (mr-create-terminals num-terminals)
+
+  (setq sym-vec (mr-make-symbols num-terminals))
+  (setq dict (cons (list :name (aref sym-vec 0)
+			 :buffer master-buffer-name)
+		   (mr-make-dict num-terminals)))
+  
+  (defun make-vertical-or-horizontal-pane (num-terminals offset choice)
+    (if (= num-terminals 1) (aref sym-vec offset)
+      (list (if (= choice 0) '| '-) `(,(if (= choice 0) :left-size-ratio :upper-size-ratio)
+				      ,(/ (- num-terminals 1.0) num-terminals))
+	    (make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) choice) (aref sym-vec offset))))
+
+  (defun make-internal-recipe (num-terminals window-batch)
+    (setq num-panes (if (= (% num-terminals window-batch) 0)
+			(/ num-terminals window-batch) (1+ (/ num-terminals window-batch))))
+    (if (<= num-terminals window-batch)
+	(make-vertical-or-horizontal-pane num-terminals num-terminals 1)
+      (list '| `(:left-size-ratio ,(/ (- num-panes 1.0) num-panes))
+	    (make-internal-recipe (- num-terminals (if (= (% num-terminals window-batch) 0)
+						       window-batch
+						     (% num-terminals window-batch)))
+				  window-batch)
+	    (make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
+				  (% num-terminals window-batch))
+				num-terminals 1))))
+
+  (setq internal-recipe (make-internal-recipe num-terminals window-batch))
+  (setq overall-recipe `(- (:upper-size-ratio 0.9)
+			   ,internal-recipe ,(aref sym-vec 0)))
+  (wlf:layout
+   overall-recipe
+   dict)
+  (select-window (get-buffer-window master-buffer-name))
   (setq mr-terminals (number-sequence 1 num-terminals))
   (concat "Preemptively setting mr-terminals to " (prin1-to-string mr-terminals)))
 
