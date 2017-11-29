@@ -10,6 +10,7 @@
 (setq multi-run-timers (list))
 
 (defun mr-get-buffer-name (term-num)
+  "Returns the name of the buffer for a given terminal number"
   (cond ((string= mr-term "eshell") (concat "eshell<" (number-to-string term-num) ">"))
 	((string= mr-term "shell") (concat "shell<" (number-to-string term-num) ">"))
 	((string= mr-term "ansi-term") (concat "ansi-term<" (number-to-string term-num) ">"))
@@ -17,6 +18,7 @@
 	((string= mr-term "multi-term") (concat "terminal<" (number-to-string term-num) ">"))))
 
 (defun mr-get-input-function ()
+  "Returns the name of the function that runs the input on the terminal"
   (cond ((string= mr-term "eshell") 'eshell-send-input)
 	((string= mr-term "shell") 'comint-send-input)
 	((string= mr-term "ansi-term") 'term-send-input)
@@ -24,6 +26,7 @@
 	((string= mr-term "multi-term") 'term-send-input)))
 
 (defun mr-get-new-input-point ()
+  "Moves point to the latest prompt in the terminal buffer"
   (cond ((string= mr-term "eshell") eshell-last-output-end)
 	((string= mr-term "shell") (process-mark (get-buffer-process (current-buffer))))
 	((string= mr-term "ansi-term") (process-mark (get-buffer-process (current-buffer))))
@@ -31,6 +34,7 @@
 	((string= mr-term "multi-term") (process-mark (get-buffer-process (current-buffer))))))
 
 (defun mr-open-terminal (term-num)
+  "Opens terminal number term-num in a buffer if it's not already open. In any case, switches to it"
   (when (not (get-buffer (mr-get-buffer-name term-num)))
     (progn
       (cond ((string= mr-term "eshell") (eshell term-num))
@@ -43,14 +47,15 @@
 
 ;; run a command on a single terminal
 (defun mr-run-on-single-terminal (command term-num)
+  "Runs the command on a single terminal"
   (set-buffer (mr-get-buffer-name term-num))
   (goto-char (mr-get-new-input-point))
   (insert command)
   (funcall (mr-get-input-function)))
 
-;; run a command on multiple terminals - useful for ssh
+;; run a command on multiple terminals
 (defun mr-run-on-terminals (command term-nums &optional delay)
-  "Run a command on multiple terminals - useful for ssh"
+  "Runs the command on multiple terminals with an optional delay between running on successive terminals"
   (when (not delay)
     (setq delay 0))
   (setq delay-cnt 0)
@@ -64,28 +69,30 @@
     (setq delay-cnt (1+ delay-cnt))))
 
 (defun mr-create-terminals (num-terminals)
+  "Creates num-terminals number of terminals"
   (dotimes (i num-terminals)
     (mr-open-terminal (1+ i))))
 
-(defun mr-make-symbols (num-terminals)
-  (defun mr-make-symbols-helper (cnt)
-    (when (<= cnt num-terminals)
-      (vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (mr-make-symbols-helper (1+ cnt)))))
-  (mr-make-symbols-helper 0))
-
-(defun mr-make-dict (num-terminals)
-  (defun mr-make-dict-helper (cnt)
-    (when (<= cnt num-terminals)
-      (cons (list :name (aref sym-vec cnt)
-		  :buffer (mr-get-buffer-name cnt))
-	    (mr-make-dict-helper (1+ cnt)))))
-  (mr-make-dict-helper 1))
-
 (defun mr-configure-terminals (num-terminals &optional window-batch)
+  "Lays out the terminals on the screen"
   (when (not window-batch)
     (setq window-batch 5))
   (setq master-buffer-name (buffer-name))
   (mr-create-terminals num-terminals)
+
+  (defun mr-make-symbols (num-terminals) 
+    (defun mr-make-symbols-helper (cnt)
+      (when (<= cnt num-terminals)
+	(vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (mr-make-symbols-helper (1+ cnt)))))
+    (mr-make-symbols-helper 0))
+
+  (defun mr-make-dict (num-terminals)
+    (defun mr-make-dict-helper (cnt)
+      (when (<= cnt num-terminals)
+	(cons (list :name (aref sym-vec cnt)
+		    :buffer (mr-get-buffer-name cnt))
+	      (mr-make-dict-helper (1+ cnt)))))
+    (mr-make-dict-helper 1))
 
   (setq sym-vec (mr-make-symbols num-terminals))
   (setq dict (cons (list :name (aref sym-vec 0)
@@ -109,8 +116,8 @@
 						     (% num-terminals window-batch)))
 				  window-batch)
 	    (make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
-				  (% num-terminals window-batch))
-				num-terminals 1))))
+						(% num-terminals window-batch))
+					      num-terminals 1))))
 
   (setq internal-recipe (make-internal-recipe num-terminals window-batch))
   (setq overall-recipe `(- (:upper-size-ratio 0.9)
@@ -123,6 +130,7 @@
   (concat "Preemptively setting mr-terminals to " (prin1-to-string mr-terminals)))
 
 (defun multi-run (&rest cmd)
+  "Runs one or more commands on multiple terminals"
   (interactive)
   (when (not (boundp (quote mr-terminals)))
     (error "Define the variable mr-terminals on which you want to run the command on. e.g. (list 1 2 3)"))
@@ -132,11 +140,13 @@
   nil)
 
 (defun multi-run-with-delay (delay cmd)
+  "Runs one or more commands on multiple terminals with the provided delay"
   (when (not (boundp (quote mr-terminals)))
     (error "Define the variable mr-terminals on which you want to run the command on. e.g. (list 1 2 3)"))
   (mr-run-on-terminals cmd mr-terminals delay))
 
 (defun multi-run-loop (cmd &optional times delay)
+  "Loops the command given number of times with delay between successive runs"
   (when (not times)
     (setq times 1))
   (when (not delay)
@@ -150,6 +160,7 @@
 
 ;; convenience function for ssh'ing to the terminals
 (defun multi-run-ssh (&optional terminal-num)
+  "Establishes ssh connections in the terminals with the help of user-defined variables"
   (when (not (boundp (quote mr-terminals)))
     (error "Define the variable mr-terminals on which you want to run the command on. e.g. (list 1 2 3)"))
   (when (not (boundp (quote mr-hostnames-list)))
@@ -157,6 +168,7 @@
   (mr-run-on-terminals (lambda (x) (concat "ssh " (if (boundp (quote ssh-username)) (concat ssh-username "@") "") (elt mr-hostnames-list (- x 1)))) (if terminal-num (list terminal-num) mr-terminals)))
 
 (defun mr-kill-terminals (&optional terminal-num)
+  "Kills terminals"
   (when (not (boundp (quote mr-terminals)))
     (error "Define the variable mr-terminals on which you want to run the command on. e.g. (list 1 2 3)"))
   (if terminal-num
@@ -165,6 +177,7 @@
   nil)
 
 (defun mr-kill-all-timers ()
+  "Cancels commands running on a loop"
   (mapc (lambda (timer) (cancel-timer timer)) multi-run-timers)
   "All timers canceled")
 
