@@ -129,10 +129,6 @@
   (setq mr-terminals (number-sequence 1 num-terminals))
   (concat "Preemptively setting mr-terminals to " (prin1-to-string mr-terminals)))
 
-(defun multi-run (&rest cmd)
-  "Runs one or more commands on multiple terminals" 
-  (apply #'multi-run-with-delay 0 cmd))
-
 (defun multi-run-with-delay (delay &rest cmd)
   "Runs one or more commands on multiple terminals with the provided delay"
   (when (not (boundp (quote mr-terminals)))
@@ -142,6 +138,20 @@
     (setq multi-run-timers (cons (run-at-time (concat (number-to-string delay-now) " sec") nil 'mr-run-on-terminals command mr-terminals delay) multi-run-timers))
     (setq delay-now (+ delay-now (* (length mr-terminals) delay))))
   nil)
+
+(defun multi-run-with-delay2 (delay &rest cmd)
+  "Runs one or more commands on multiple terminals with the provided delay - but the delay is between different command invocations at the terminals, as opposed to delay between running commands on different terminals"
+  (when (not (boundp (quote mr-terminals)))
+    (error "Define the variable mr-terminals on which you want to run the command on. e.g. (list 1 2 3)"))
+  (setq delay-now 0)
+  (dolist (command cmd)
+    (setq multi-run-timers (cons (run-at-time (concat (number-to-string delay-now) " sec") nil 'mr-run-on-terminals command mr-terminals) multi-run-timers))
+    (setq delay-now (+ delay-now delay)))
+  nil)
+
+(defun multi-run (&rest cmd)
+  "Runs one or more commands on multiple terminals" 
+  (apply #'multi-run-with-delay 0 cmd))
 
 (defun multi-run-loop (cmd &optional times delay)
   "Loops the command given number of times with delay between successive runs"
