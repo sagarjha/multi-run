@@ -2,7 +2,9 @@
 
 (require 'window-layout)
 
-(setq mr-term "eshell")
+(defvar mr-term "eshell"
+  "Terminal type to run the commands on")
+;; (setq mr-term "eshell")
 ;; (setq mr-term "shell")
 ;; (setq mr-term "ansi-term")
 ;; (setq mr-term "term")
@@ -185,7 +187,7 @@
   nil)
 
 (defun mr-kill-all-timers ()
-  "Cancels commands running on a loop"
+  "Cancels commands running on a loop or via delay functions"
   (mapc (lambda (timer) (cancel-timer timer)) multi-run-timers)
   "All timers canceled")
 

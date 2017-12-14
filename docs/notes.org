@@ -2,4 +2,7 @@
 - make a list of eshell parameters to tune before installation
   + visual-line mode (not just for eshell)
   + auto scroll to bottom (this is for any terminal)
+- ssh setup
+- defalias
+- defvar
 - add on elpa with dependency on window-layout-function
