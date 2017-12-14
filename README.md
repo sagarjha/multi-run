@@ -75,6 +75,8 @@ In addition, you can set the variable `mr-terminals` to manually change the list
 
   ![Alt text](docs/before_and_after_visual_line_mode.png?raw=true "Before and after visual line mode - without line wrapping, entire directory contents are not visible")
 
+  Before and after visual line mode - without line wrapping, entire directory contents are not visible
+
 * Emacs will not automatically scroll output of eshell and terminal buffers. Add this:
 
     >(custom-set-variables  
