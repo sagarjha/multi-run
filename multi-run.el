@@ -31,7 +31,11 @@
 
 (require 'window-layout)
 
-(defvar multi-run-term-type 'eshell
+(defgroup multi-run nil
+  "Run commands in multiple terminal windows."
+  :group 'terminals)
+
+(defcustom multi-run-term-type 'eshell
   "Terminal type to run the commands on.")
 ;; set multi-run-term-type to any of the supported terminals by running the appropriate expression from below
 ;; (setq multi-run-term-type 'eshell)
@@ -40,17 +44,12 @@
 ;; (setq multi-run-term-type 'term)
 ;; (setq multi-run-term-type 'multi-term)
 
-(defvar multi-run-timers-list ((list))
+(defvar multi-run-timers-list nil
   "Internal list of timers to cancel when multi-run-kill-all-timers is called.")
 
 (defun multi-run-match-term-type-p (multi-run-term-type)
-  "Return true if MULTI-RUN-TERM-TYPE is one of the supported terminal types."
-  (pcase multi-run-term-type
-    ('eshell 't)
-    ('shell 't)
-    ('ansi-term 't)
-    ('term 't)
-    ('multi-term 't)))
+  "Return non-nil if MULTI-RUN-TERM-TYPE is one of the supported terminal types."
+  (memq multi-run-term-type '(eshell shell ansi-term term multi-term)))
 
 (defun multi-run-get-buffer-name (term-num)
   "Return the name of the buffer for a given terminal number TERM-NUM."
@@ -83,12 +82,12 @@
   (when (not (get-buffer (multi-run-get-buffer-name term-num)))
     (progn
       (pcase multi-run-term-type
-	('eshell (eshell term-num))
-	('shell (shell))
-	('ansi-term (ansi-term "/bin/bash"))
-	('term (term "/bin/bash"))
-	('multi-term (multi-term))
-	(multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term")))
+        ('eshell (eshell term-num))
+        ('shell (shell))
+        ('ansi-term (ansi-term "/bin/bash"))
+        ('term (term "/bin/bash"))
+        ('multi-term (multi-term))
+        (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term")))
       (rename-buffer (multi-run-get-buffer-name term-num))))
   (switch-to-buffer (multi-run-get-buffer-name term-num)))
 
@@ -108,14 +107,14 @@
   (let ((delay-cnt 0))
     (while term-nums
       (let ((evaled-command (if (functionp command)
-				(funcall command (car term-nums)) command)))
-	(setq multi-run-timers-list
-	      (cons (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
-				 nil
-				 'multi-run-on-single-terminal evaled-command (car term-nums))
-		    multi-run-timers-list))
-	(setq term-nums (cdr term-nums))
-	(setq delay-cnt (1+ delay-cnt))))))
+                                (funcall command (car term-nums)) command)))
+        (setq multi-run-timers-list
+              (cons (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
+                                 nil
+                                 'multi-run-on-single-terminal evaled-command (car term-nums))
+                    multi-run-timers-list))
+        (setq term-nums (cdr term-nums))
+        (setq delay-cnt (1+ delay-cnt))))))
 
 (defun multi-run-create-terminals (num-terminals)
   "Create NUM-TERMINALS number of terminals."
@@ -132,45 +131,45 @@
   (defun multi-run-make-symbols (num-terminals)
     (defun multi-run-make-symbols-helper (cnt)
       (when (<= cnt num-terminals)
-	(vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (multi-run-make-symbols-helper (1+ cnt)))))
+        (vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (multi-run-make-symbols-helper (1+ cnt)))))
     (multi-run-make-symbols-helper 0))
 
   (defun multi-run-make-dict (num-terminals)
     (defun multi-run-make-dict-helper (cnt)
       (when (<= cnt num-terminals)
-	(cons (list :name (aref sym-vec cnt)
-		    :buffer (multi-run-get-buffer-name cnt))
-	      (multi-run-make-dict-helper (1+ cnt)))))
+        (cons (list :name (aref sym-vec cnt)
+                    :buffer (multi-run-get-buffer-name cnt))
+              (multi-run-make-dict-helper (1+ cnt)))))
     (multi-run-make-dict-helper 1))
 
   (setq sym-vec (multi-run-make-symbols num-terminals))
   (setq dict (cons (list :name (aref sym-vec 0)
-			 :buffer master-buffer-name)
-		   (multi-run-make-dict num-terminals)))
-  
+                         :buffer master-buffer-name)
+                   (multi-run-make-dict num-terminals)))
+
   (defun make-vertical-or-horizontal-pane (num-terminals offset choice)
     (if (= num-terminals 1) (aref sym-vec offset)
       (list (if (= choice 0) '| '-) `(,(if (= choice 0) :left-size-ratio :upper-size-ratio)
-				      ,(/ (- num-terminals 1.0) num-terminals))
-	    (make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) choice) (aref sym-vec offset))))
+                                      ,(/ (- num-terminals 1.0) num-terminals))
+            (make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) choice) (aref sym-vec offset))))
 
   (defun make-internal-recipe (num-terminals window-batch)
     (setq num-panes (if (= (% num-terminals window-batch) 0)
-			(/ num-terminals window-batch) (1+ (/ num-terminals window-batch))))
+                        (/ num-terminals window-batch) (1+ (/ num-terminals window-batch))))
     (if (<= num-terminals window-batch)
-	(make-vertical-or-horizontal-pane num-terminals num-terminals 1)
+        (make-vertical-or-horizontal-pane num-terminals num-terminals 1)
       (list '| `(:left-size-ratio ,(/ (- num-panes 1.0) num-panes))
-	    (make-internal-recipe (- num-terminals (if (= (% num-terminals window-batch) 0)
-						       window-batch
-						     (% num-terminals window-batch)))
-				  window-batch)
-	    (make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
-						(% num-terminals window-batch))
-					      num-terminals 1))))
+            (make-internal-recipe (- num-terminals (if (= (% num-terminals window-batch) 0)
+                                                       window-batch
+                                                     (% num-terminals window-batch)))
+                                  window-batch)
+            (make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
+                                                (% num-terminals window-batch))
+                                              num-terminals 1))))
 
   (setq internal-recipe (make-internal-recipe num-terminals window-batch))
   (setq overall-recipe `(- (:upper-size-ratio 0.9)
-			   ,internal-recipe ,(aref sym-vec 0)))
+                           ,internal-recipe ,(aref sym-vec 0)))
   (wlf:layout
    overall-recipe
    dict)
@@ -211,9 +210,9 @@
   (let ((delay-cnt 0))
     (dotimes (i times)
       (progn
-	(setq multi-run-timers-list (cons (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
-						  nil '(lambda (cmd) (multi-run cmd)) cmd) multi-run-timers-list))
-	(setq delay-cnt (1+ delay-cnt))))))
+        (setq multi-run-timers-list (cons (run-at-time (concat (number-to-string (* delay-cnt delay)) " sec")
+                                                       nil '(lambda (cmd) (multi-run cmd)) cmd) multi-run-timers-list))
+        (setq delay-cnt (1+ delay-cnt))))))
 
 ;; convenience function for ssh'ing to the terminals
 (defun multi-run-ssh (&optional terminal-num)
@@ -235,8 +234,7 @@
 
 (defun multi-run-kill-all-timers ()
   "Cancel commands running on a loop or via delay functions."
-  (mapc (lambda (timer) (cancel-timer timer)) multi-run-timers-list)
-  "All timers canceled")
+  (mapc 'cancel-timer timer multi-run-timers-list))
 
 
 (provide 'multi-run)
