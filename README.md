@@ -75,7 +75,7 @@ Following is a list of important variables and functions for a user of the libra
     `(setq multi-run-hostnames-list (list "ip_addr1" "ip_addr2" ...))`  
   The `ith` element of the list will be used for SSHing in the `ith` terminal. I don't know what will happen if you run `run-ssh` with insufficient number of IPs in `multi-run-hostnames-list`.  
 
-  Define the variable `ssh-username` if you need to provide a username. The same username is used for all SSHs.
+  Define the variable `multi-run-ssh-username` if you need to provide a username. The same username is used for all SSHs.
 
 * All the functions and variables have `multi-run-` in their beginning to avoid name collisions. You can define shorthands (if they are safe). For example:
 
