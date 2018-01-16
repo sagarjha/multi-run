@@ -234,7 +234,8 @@
 
 (defun multi-run-kill-all-timers ()
   "Cancel commands running on a loop or via delay functions."
-  (mapc 'cancel-timer timer multi-run-timers-list))
+  (mapc 'cancel-timer multi-run-timers-list)
+  "All timers canceled")
 
 
 (provide 'multi-run)
