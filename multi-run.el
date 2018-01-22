@@ -50,15 +50,6 @@
 (defvar multi-run-timers-list nil
   "Internal list of timers to cancel when multi-run-kill-all-timers is called.")
 
-(defvar multi-run-master-buffer-name nil
-  "Name of buffer from where multi-run-configure-terminals is called.")
-
-(defvar multi-run-sym-vec nil
-  "Vector of symbols, one for each new terminal to be created.")
-
-(defvar multi-run-buffer-dict nil
-  "Dictionary mapping symbols to buffer names.")
-
 (defvar multi-run-hostnames-list nil
   "List of hostnames for multi-run-ssh.")
 
@@ -120,9 +111,8 @@
 ;; run a command on multiple terminals
 (defun multi-run-on-terminals (command term-nums &optional delay)
   "Run the COMMAND on terminals in TERM-NUMS with an optional DELAY between running on successive terminals."
-  (unless delay
-    (setq delay 0))
-  (let ((delay-cnt 0))
+  (let ((delay (if delay delay 0))
+	(delay-cnt 0))
     (while term-nums
       (let ((evaled-command (if (functionp command)
                                 (funcall command (car term-nums)) command)))
@@ -139,62 +129,62 @@
   (dotimes (i num-terminals)
     (multi-run-open-terminal (1+ i))))
 
+(defun multi-run-make-vertical-or-horizontal-pane (num-terminals offset sym-vec choice)
+  "Helper function for multi-run-configure-terminals.  Create NUM-TERMINALS number of windows with buffer names given by OFFSET into SYM-VEC.  The windows are created in a single vertical or horizontal pane determined by CHOICE."
+  (if (= num-terminals 1) (aref sym-vec offset)
+    (list (if (= choice 0) '| '-) `(,(if (= choice 0) :left-size-ratio :upper-size-ratio)
+				    ,(/ (- num-terminals 1.0) num-terminals))
+	  (multi-run-make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) sym-vec choice) (aref sym-vec offset))))
+
+(defun multi-run-make-internal-recipe (num-terminals window-batch sym-vec)
+  "Helper function for multi-run-configure-terminals.  Create a recipe for wlf:layout for NUM-TERMINALS number of terminal buffers with WINDOW-BATCH of them in one vertical pane.  Get symbol names for terminals from SYM-VEC."
+  (let ((num-panes (if (= (% num-terminals window-batch) 0)
+		       (/ num-terminals window-batch) (1+ (/ num-terminals window-batch)))))
+    (if (<= num-terminals window-batch)
+	(multi-run-make-vertical-or-horizontal-pane num-terminals num-terminals sym-vec 1)
+      (list '| `(:left-size-ratio ,(/ (- num-panes 1.0) num-panes))
+	    (multi-run-make-internal-recipe (- num-terminals (if (= (% num-terminals window-batch) 0)
+								 window-batch
+							       (% num-terminals window-batch)))
+					    window-batch sym-vec)
+	    (multi-run-make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
+							  (% num-terminals window-batch))
+							num-terminals sym-vec 1)))))
+
+(defun multi-run-make-symbols (num-terminals &optional cnt)
+  "Create unique symbols for NUM-TERMINALS number of terminals having created recursively symbols for CNT of them."
+  (unless cnt
+    (setq cnt 0))
+  (when (<= cnt num-terminals)
+    (vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (multi-run-make-symbols num-terminals (1+ cnt)))))
+
+(defun multi-run-make-dict (num-terminals sym-vec &optional cnt)
+  "Create a dictionary of terminal symbol names and their associated buffer names for NUM-TERMINALS number of terminals with symbols from SYM-VEC, having created recursively entries for CNT of them."
+  (unless cnt
+    (setq cnt 1))
+  (when (<= cnt num-terminals)
+    (cons (list :name (aref sym-vec cnt)
+		:buffer (multi-run-get-buffer-name cnt))
+	  (multi-run-make-dict num-terminals sym-vec (1+ cnt)))))
+
 (defun multi-run-configure-terminals (num-terminals &optional window-batch)
   "Lay out NUM-TERMINALS number of terminals on the screen with WINDOW-BATCH number of them in one single vertical slot."
-  (unless window-batch
-    (setq window-batch 5))
-  (setq multi-run-master-buffer-name (buffer-name))
-  (multi-run-create-terminals num-terminals)
-
-  (defun multi-run-make-symbols (num-terminals)
-    (defun multi-run-make-symbols-helper (cnt)
-      (when (<= cnt num-terminals)
-        (vconcat (vector (make-symbol (concat "term" (number-to-string cnt)))) (multi-run-make-symbols-helper (1+ cnt)))))
-    (multi-run-make-symbols-helper 0))
-
-  (setq multi-run-sym-vec (multi-run-make-symbols num-terminals))
-  
-  (defun multi-run-make-dict (num-terminals)
-    (defun multi-run-make-dict-helper (cnt)
-      (when (<= cnt num-terminals)
-        (cons (list :name (aref multi-run-sym-vec cnt)
-                    :buffer (multi-run-get-buffer-name cnt))
-              (multi-run-make-dict-helper (1+ cnt)))))
-    (multi-run-make-dict-helper 1))
-
-  (setq multi-run-buffer-dict (cons (list :name (aref multi-run-sym-vec 0)
-					  :buffer multi-run-master-buffer-name)
-				    (multi-run-make-dict num-terminals)))
-
-  (defun make-vertical-or-horizontal-pane (num-terminals offset choice)
-    (if (= num-terminals 1) (aref multi-run-sym-vec offset)
-      (list (if (= choice 0) '| '-) `(,(if (= choice 0) :left-size-ratio :upper-size-ratio)
-                                      ,(/ (- num-terminals 1.0) num-terminals))
-            (make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) choice) (aref multi-run-sym-vec offset))))
-
-  (defun make-internal-recipe (num-terminals window-batch)
-    (let ((num-panes (if (= (% num-terminals window-batch) 0)
-			 (/ num-terminals window-batch) (1+ (/ num-terminals window-batch)))))
-      (if (<= num-terminals window-batch)
-	  (make-vertical-or-horizontal-pane num-terminals num-terminals 1)
-	(list '| `(:left-size-ratio ,(/ (- num-panes 1.0) num-panes))
-	      (make-internal-recipe (- num-terminals (if (= (% num-terminals window-batch) 0)
-							 window-batch
-						       (% num-terminals window-batch)))
-				    window-batch)
-	      (make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
-						  (% num-terminals window-batch))
-						num-terminals 1)))))
-
-  (let* ((internal-recipe (make-internal-recipe num-terminals window-batch))
+  (let* ((window-batch (if window-batch window-batch 5))
+	 (master-buffer-name (buffer-name))
+	 (sym-vec (multi-run-make-symbols num-terminals))
+	 (buffer-dict (cons (list :name (aref sym-vec 0)
+				  :buffer master-buffer-name)
+			    (multi-run-make-dict num-terminals sym-vec)))
+	 (internal-recipe (multi-run-make-internal-recipe num-terminals window-batch sym-vec))
 	 (overall-recipe `(- (:upper-size-ratio 0.9)
-			     ,internal-recipe ,(aref multi-run-sym-vec 0))))
+			     ,internal-recipe ,(aref sym-vec 0))))
+    (multi-run-create-terminals num-terminals)
     (wlf:layout
      overall-recipe
-     multi-run-buffer-dict)
-    (select-window (get-buffer-window multi-run-master-buffer-name))
+     buffer-dict)
+    (select-window (get-buffer-window master-buffer-name))
     (setq multi-run-terminals-list (number-sequence 1 num-terminals))
-    (concat "Preemptively setting multi-run-terminals-list to " (prin1-to-string multi-run-terminals))))
+    (concat "Preemptively setting multi-run-terminals-list to " (prin1-to-string multi-run-terminals-list))))
 
 (defun multi-run-with-delay (delay &rest cmd)
   "With the provided DELAY, run one or more commands CMD on multiple terminals - the delay is between running commands on different terminals."
