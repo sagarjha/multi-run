@@ -1,6 +1,9 @@
 markdown: kramdown
 theme: jekyll-theme-hacker
 
+kramdown:
+  syntax_highlighter: rouge
+
 title: multi-run
 email: sjsagarjha3@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
