@@ -166,13 +166,13 @@ The following video shows the basic features of running a simple command in a lo
 [![multi-run-loop](https://img.youtube.com/vi/lnIQst7yqKM/0.jpg)](https://www.youtube.com/watch?v=lnIQst7yqKM)
 
 ## Terminal types ##
-multi_run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including bash emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the following types. I highly recommend using the default type eshell, however you might want to use a bash emulator because:
+multi_run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including bash emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the above types. I highly recommend using the default type eshell, however, you might want to use a bash emulator because:
 1. eshell has its own idiomatic way of using it which can take time getting used to. For example, its tab completion, command search in history etc. work differently.
-2. eshell is not an emulation of bash. "Most" bash commands are supported and will work as expected. Further, eshell does not support input redirection.
+2. eshell is not an emulation of bash. "Most" bash commands are supported and will work as expected. Furthermore, eshell does not support input redirection.
 <br>Both these points aren't much relevant if you are working on remote nodes, because then you will be using SSH which will run bash (or equivalent) inside the eshell terminal.
 3. eshell integration with shell processes is not satisfactory. You will not be able to access command history or use tab-completion in SSH.
 
-multi-run support _term_, _multi-term_, _ansi-term_ and _shell_ apart from _eshell_. To change the terminal type, set the variable _multi-run-term-type_.
+multi-run supports _term_, _multi-term_, _ansi-term_ and _shell_ apart from _eshell_. To change the terminal type, set the variable _multi-run-term-type_.
 
 ```emacs-lisp
 (defcustom multi-run-term-type 'eshell
