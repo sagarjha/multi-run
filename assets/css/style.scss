@@ -13,6 +13,13 @@ h2 {
 body {
     counter-reset: h2counter;
 }
+
+@media only screen and (max-width: 1000px) {
+    body {
+	margin-left: 30%;
+    }
+}
+
 h1 {
     counter-reset: h2counter;
 }
