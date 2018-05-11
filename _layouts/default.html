@@ -71,13 +71,13 @@
         <h2 class="nocount">{{ site.description | default: site.github.project_tagline }}</h2>
 
         <section id="downloads">
-          {% if site.show_downloads %}
-          <a href="{{ site.github.zip_url }}" class="btn">Download as .zip</a>
-          <a href="{{ site.github.tar_url }}" class="btn">Download as .tar.gz</a>
-          {% endif %}
 	  <a href="http://www.cs.cornell.edu/~sagarjha"><font color="ruby">Sagar Jha</font></a>
 	  &nbsp;&nbsp;&nbsp;&nbsp;
           <a href="{{ site.github.repository_url }}" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+          {% if site.show_downloads %}
+          <a href="https://github.com/sagarjha/multi-run/archive/v1.zip" class="btn">Download v1 .zip</a>
+          <a href="https://github.com/sagarjha/multi-run/archive/v1.tar.gz" class="btn">Download v1 .tar.gz</a>
+          {% endif %}
         </section>
       </div>
     </header>
@@ -93,7 +93,13 @@
       <a class="x" href="#aborting-commands" target="_self">&nbsp;&nbsp;4. Aborting Commands</a>
       <a class="x" href="#commands-with-delay" target="_self">&nbsp;&nbsp;5. Commands with delay</a>
       <a class="x" href="#loops" target="_self">&nbsp;&nbsp;6. Loops</a>
+      <a href="#installation" target="_self">Installation</a>
       <a href="#useful-emacs-customization-for-multi-run" target="_self">Customization tips</a>
+      <a href="#advanced-examples" target="_self">Advanced examples</a>
+      <a class="x" href="#gdb" target="_self">&nbsp;&nbsp;1. gdb</a>
+      <a class="x" href="#performance-tests" target="_self">&nbsp;&nbsp;2. Performance tests</a>
+      <a class="x" href="#miscellaneous" target="_self">&nbsp;&nbsp;3. Miscellaneous</a>
+      <a href="#conclusion" target="_self">Conclusion</a>
       <br>
       <br>
       <br>

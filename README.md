@@ -1,4 +1,3 @@
-<strong><font color="blueviolet" size="6">UNDER CONSTRUCTION!! CHECK BACK LATER!!!</font></strong>
 # Introduction #
 _Emacs_ supports multiple terminal types including bash emulators (term, ansi-term), shell and eshell. Using terminals inside Emacs helps one avoid the need to switch environments for running shell commands. Refer to [mastering emacs](https://www.masteringemacs.org/article/running-shells-in-emacs-overview) for an excellent overview of using terminals in Emacs.
 
@@ -158,7 +157,7 @@ So how does one abort loops? With the delay and loop functions, _multi_run_ regi
 
 ```emacs-lisp
 (defun multi-run-kill-all-timers ()
-  "Cancel commands running on a loop or via delay functions." ...)
+  "Cancel commands scheduled by multi-run-loop or multi-run-with-delay." ...)
 ```
 
 The following video shows the basic features of running a simple command in a loop, running a lambda function, and aborting loops.
@@ -167,10 +166,13 @@ The following video shows the basic features of running a simple command in a lo
 
 ## Terminal types ##
 multi_run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including bash emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the above types. I highly recommend using the default type eshell, however, you might want to use a bash emulator because:
-1. eshell has its own idiomatic way of using it which can take time getting used to. For example, its tab completion, command search in history etc. work differently.
+1. eshell has its own idiomatic way of using it that can take time getting used to. For example, its tab completion, command search in history etc. work differently.
 2. eshell is not an emulation of bash. "Most" bash commands are supported and will work as expected. Furthermore, eshell does not support input redirection.
 <br>Both these points aren't much relevant if you are working on remote nodes, because then you will be using SSH which will run bash (or equivalent) inside the eshell terminal.
 3. eshell integration with shell processes is not satisfactory. You will not be able to access command history or use tab-completion in SSH.
+
+The following image contrasts syntax coloring in eshell (left) vs term (right):
+![Alt text](docs/mr_syntax_coloring.png?raw=true "Syntax coloring - eshell vs term")
 
 multi-run supports _term_, _multi-term_, _ansi-term_ and _shell_ apart from _eshell_. To change the terminal type, set the variable _multi-run-term-type_.
 
@@ -185,6 +187,84 @@ After changing the terminal type, you can start from multi-run-configure-termina
 <hr>
 <br>
 
-# Useful Emacs Customization for multi-run #
+# Installation #
+_multi-run_ is part of Emacs' package manager _MELPA_. Installing it from MELPA is the easiest option.
 
-<strong><font color="blueviolet" size="6">UNDER CONSTRUCTION!! CHECK BACK LATER!!!</font></strong>
+Alternatively, you can download the [v1-release](https://github.com/sagarjha/multi-run/releases/tag/v1) from github. You just need the file _multi-run.el_. Store it in a directory included in Emacs' load-path and load it by adding
+```emacs-lisp
+(require 'multi-run)
+```
+to the _.emacs_ file. If you are installing manually this way, you will also have to install [window-layout](https://github.com/kiwanami/emacs-window-layout) that multi-run depends on.
+
+<br>
+<hr>
+<br>
+
+# Useful Emacs customization for multi-run #
+1. After you run a command, you will want the buffers showing the terminals to automatically scroll past the output to the next prompt. Emacs will not automatically scroll to the bottom of the output unless you set the variables _eshell-scroll-to-bottom-on-output_ (for eshell), _comint-scroll-to-bottom-on-output_ (for shell) and _term-scroll-to-bottom-on-output_ (for term). A convenient way to set these is by adding the following lines in your _.emacs_:
+```emacs-lisp
+(custom-set-variables
+  '(comint-scroll-to-bottom-on-output (quote all))
+  '(eshell-scroll-to-bottom-on-output (quote all))
+  '(term-scroll-to-bottom-on-output (quote all)))
+```
+2. Every one of multi-run functions has a prefix of _multi-run-_ in its name. This branding is necessary to avoid name collisions as emacs-lisp does not support namespaces. You can define shorthands to these functions, for example, _run_ for _multi-run_, _configure-terminals_ for _multi-run-configure-terminals_ etc. provided the shorthands do not collide with existing names. You can add these in your _.emacs_ file. For example,
+```emacs-lisp
+(defalias 'run 'multi-run)
+(defalias 'configure-terminals 'mr-configure-terminals)
+(defalias 'run-ssh 'multi-run-ssh)
+(defalias 'kill-timers 'multi-run-kill-all-timers)
+(defalias 'kill-terminals 'multi-run-kill-terminals)
+(defalias 'run-loop 'multi-run-loop)
+(defalias 'run-with-delay 'multi-run-with-delay)
+```
+3. Since you are likely going to work with many buffers on the screen, turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.\\
+The following image shows the difference. In the left half, entire directory contents are not visible because of no line wrapping.
+![Alt text](docs/before_and_after_visual_line_mode.png?raw=true "Before and after visual line mode - without line wrapping, entire directory contents are not visible")
+If you notice no wrapping, add this to your _.emacs_:
+```
+(add-hook 'eshell-mode-hook 'visual-line-mode)
+```
+4. In some cases, you might want to jump to a specific terminal buffer. If you have many buffers on the screen, using _other-window_ (bound to _C-x o_) is inefficient. You can install packages [window-number](https://github.com/nikolas/window-number) or [ace-jump-mode](https://github.com/winterTTr/ace-jump-mode/) to efficiently move between windows. To be able to undo changes in window configuration, enable _winner-mode_.
+
+<br>
+<hr>
+<br>
+
+# Advanced examples #
+## gdb ##
+For this example, suppose our distributed program has a rare non-deterministic bug. In the buggy execution, all nodes hang while in the correct execution, they all exit cleanly before 20 seconds. We don't want to manually run each execution inside gdb using multi-run in hopes of hitting a buggy run. Instead, we can use multi-run-loop to start a loop running the program in gdb. The good thing is that when the program hits the bug, successive loop iterations have no effect since the previous iteration is not complete. This means that you can leaeve the loop running in the background and check periodically if the bug has been triggered.
+
+The following video shows exactly this. I start a loop running 200 iterations with a 25 second delay. The buggy execution is triggered in the 85^th iteration of the loop, after more than 35 minutes.
+
+[![multi-run-loop](https://img.youtube.com/vi/t5SYBEicqsw/0.jpg)](https://www.youtube.com/watch?v=t5SYBEicqsw)
+
+Similarly, programs can be run in a loop (with or without gdb) to
+loosely verify that they are working every time. But, what if the
+programs do not exit and enter an infinite loop instead? You can
+interleave a loop that runs _^C_ so that the next run can start!
+The ability to write a multi-run script expressing these timing
+constraints (for multiple loops) will be very helpful here. Eshell
+provides a scripting functionality; I am going to look into how
+multi-run can integrate nicely with it.
+
+## Performance tests ##
+In pretty much the same way, you can write functions that cycle through the parameters and produce commands for each set of parameters. Then you can run those functions with _multi-run-loop_. Scripts can do the same thing, but with multi-run you will have more information if something goes wrong. You can also combine running performance tests with processing data in emacs-lisp and plotting the results.
+
+## Miscellaneous ##
+I created some unconventional (sometimes amusing, somewhat creative) examples of using multi-run. These are most likely not going to be relevant to you. You can find them <a href="misc.html" target="_self">here</a>.
+
+<br>
+<hr>
+<br>
+
+# Conclusion #
+Development of _multi-run_ has been guided by my use cases. I hope you like the package. If you have ideas on how to improve it, send me an email at [srj57@cornell.edu](mailto:srj57@cornell.edu).
+
+I wrote the first draft back in April 2016 with just one function multi-run. I added the delay commands in April 2017. I created the videos and applied for adding the package to MELPA in December 2017. The package was added to MELPA in January 2018 after some code cleaning/refactoring (thanks to Steve Purcell from MELPA). I released v1 right after in January. I wrote this blog and added the videos to YouTube during April and May 2018. You can find the full playlist of multi-run videos [here](https://www.youtube.com/playlist?list=PLuorXJMjI9I34tfnJaIV9IalE0UBXB0VF).
+
+Some people have argued against using emacs shells, specially eshell, for some justifiable reasons. Hopefully, this article makes a case for using eshell by showing how easily it integrates with Emacs. multi-run is just 245 lines of emacs-lisp including comments and newlines. Increasing interest in eshell will hopefully lead to a better documentation of the library and improved features.
+
+If you use Emacs for basic editing (and/or for writing code, latex, emails etc.), you should consider switching to using terminals inside Emacs. I believe this will integrate better with your workflow, specially if you mix writing code and running shell commands.
+
+Finally, if you don't use Emacs, you should!
