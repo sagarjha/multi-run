@@ -10,15 +10,15 @@ While shell scripts can possibly help with synchronizing state and running distr
 1. <span style="color:orange"> Scripts are inflexible: </span> People often need to write different scripts for different use-cases. Any small change to the script involves changing the script file which interferes with the workflow.
 2. <span style="color:orange"> Scripts are hard to debug</span>
 
-Additionally, they do not support interactive commands. Thus, what often works best in practice is to have multiple terminals visiting each node. With _multi-run_, one doesn't have to type the same command on each terminal (inefficient) or use copy-and-paste (cumbersome).
+Additionally, they do not support interactive commands. Thus, what often works best in practice is to have multiple terminals visiting each node. With _multi-run_, one doesn't have to type the same command in each terminal (inefficient) or use copy-and-paste (cumbersome).
 
 _multi-run_ provides the following functionality:
 1. <span style="color:orange"> Create and destroy multiple terminals:</span> Spawning multiple terminals or changing the working set of active terminals is as easy as running a command. Terminals are displayed in an Emacs frame for better visual connection, but can also be in the background if desired.
-2. <span style="color:orange"> Run same (or similar) commands on multiple terminals:</span> Multiple such commands can be run in a single invocation. In a lot of cases, the commands are similar, but not identical. For example, the input or command line arguments may slightly be different. With multi-run, one can run emacs-lisp lambda functions that produce a command when invoked with a terminal number.
+2. <span style="color:orange"> Run same (or similar) commands in multiple terminals:</span> Multiple such commands can be run in a single invocation. In a lot of cases, the commands are similar, but not identical. For example, the input or command line arguments may slightly be different. With multi-run, one can run emacs-lisp lambda functions that produce a command when invoked with a terminal number.
 3. <span style="color:orange"> Run commands with delays:</span> Some distributed programs need to run at the nodes with some in-between delay (e.g. server needs to start before the client, clients must start one at a time). One can run such commands with multi-run.
-4. <span style="color:orange"> Run loops:</span> The same command can be run on all the terminals in a loop. This can help with running performance tests and finding non-deterministic bugs.
+4. <span style="color:orange"> Run loops:</span> The same command can be run in all the terminals in a loop. This can help with running performance tests and finding non-deterministic bugs.
 
-The salient feature with all multi-run functions is that they are invoked as commands on a special terminal. This ensures that multi-run integrates nicely with the workflow: combining running multi-run commands with single terminal commands is totally smooth because the terminal running the multi-run commands can also run normal commands.
+The salient feature with all multi-run functions is that they are invoked as commands in a special terminal. This ensures that multi-run integrates nicely with the workflow: combining running multi-run commands with single terminal commands is totally smooth because the terminal running the multi-run commands can also run normal commands.
 
 The rest of this blog goes in depth on how to use the tool, with embedded screencasts to help understand the usage better. Later sections include instructions on how to install the package and customization tips for a better experience.
 
@@ -46,11 +46,11 @@ The following video shows how this works:
 [![multi-run-configure-terminals](https://img.youtube.com/vi/VSpy815oJPQ/0.jpg)](https://www.youtube.com/watch?v=VSpy815oJPQ)
 
 ## Running commands ##
-Having created terminals, run _multi-run cmd_ to run cmd on all the terminals.
+Having created terminals, run _multi-run cmd_ to run cmd in all the terminals.
 
 ``` emacs-lisp
 (defun multi-run (&rest cmd)
-  "Run one or more commands CMD on multiple terminals." ...)
+  "Run one or more commands CMD in multiple terminals." ...)
 ```
 
 Multiple such commands enclosed in strings can be run this way. The commands will run concurrently in the active terminals and sequentially in each terminal. Managing set of _active_ terminals is explained later.
@@ -131,11 +131,11 @@ multi-run provides the function _multi-run-wth-delay_, that introduces a delay b
 
 ```emacs-lisp
 (defun multi-run-with-delay (delay &rest cmd)
-  "With the provided DELAY, run one or more commands CMD on multiple terminals
-  - the delay is between running commands on different terminals." ...)
+  "With the provided DELAY, run one or more commands CMD in multiple terminals
+  - the delay is between running commands in different terminals." ...)
 ```
 
-For example, if you run _multi-run-with-delay 0.3 cmd_, it will run _cmd_ on terminal 1 immediately, on terminal 2 at 0.3 seconds, on terminal 3 at 0.6 seconds and so on. If multiple commands are provided as arguments, the second command will run after the first command has been run at all the terminals.
+For example, if you run _multi-run-with-delay 0.3 cmd_, it will run _cmd_ in terminal 1 immediately, in terminal 2 at 0.3 seconds, in terminal 3 at 0.6 seconds and so on. If multiple commands are provided as arguments, the second command will run after the first command has been run at all the terminals.
 
 There's a variant of this called _multi-run-with-delay2_. It has the same arguments, but runs each command in every terminal at the same time. The delay is only applied between command executions.
 
@@ -149,7 +149,7 @@ A command can be run multiple times in a loop with the function _multi-run-loop_
 
 In every invocation of the loop, _cmd_ will run in all terminals (equivalent to _multi_run cmd_). The delay is applied between different loop invocations.
 
-The reason we need to provide a delay is that in general, it is not possible to know from emacs when the commands have finished executing. This limitation forces the user to provide an upper-bound on the execution time of an invocation. In many cases, even running commands without delay is not an issue if the commands are successfully queued up and run later by the terminal (depends on the terminal type you're working with). Loops can help in finding non-deterministic bugs and running performance/correctness tests, something we will see later in more detail.
+The reason we need to provide a delay is that in general, it is not possible to know from emacs when the commands have finished executing. This limitation forces the user to provide an upper-bounds on the execution times of the commands. In many cases, even running commands without delay is not an issue if the commands are successfully queued up and run later by the terminal (depends on the terminal type you're working with). Loops can help in finding non-deterministic bugs and running performance/correctness tests, something we will see later in more detail.
 
 Just like in _multi_run_, the command can be a string or a lambda function. The lambda function is called with the terminal number to obtain the command string. With some familiarity with emacs-lisp, it is possible to write more sophisticated functions that manage state internally to make use of other parameters such as the iteration number.
 
@@ -188,7 +188,9 @@ After changing the terminal type, you can start from multi-run-configure-termina
 <br>
 
 # Installation #
-_multi-run_ is part of Emacs' package manager _MELPA_. Installing it from MELPA is the easiest option.
+multi-run is released under GNU GENERAL PUBLIC LICENSE Version 3.
+
+It is part of Emacs' package manager _MELPA_. Installing it from MELPA is the easiest option.
 
 Alternatively, you can download the [v1-release](https://github.com/sagarjha/multi-run/releases/tag/v1) from github. You just need the file _multi-run.el_. Store it in a directory included in Emacs' load-path and load it by adding
 ```emacs-lisp
@@ -218,7 +220,7 @@ to the _.emacs_ file. If you are installing manually this way, you will also hav
 (defalias 'run-loop 'multi-run-loop)
 (defalias 'run-with-delay 'multi-run-with-delay)
 ```
-3. Since you are likely going to work with many buffers on the screen, turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.\\
+3. Since you are likely going to work with many windows (buffers on the screen), turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.\\
 The following image shows the difference. In the left half, entire directory contents are not visible because of no line wrapping.
 ![Alt text](docs/before_and_after_visual_line_mode.png?raw=true "Before and after visual line mode - without line wrapping, entire directory contents are not visible")
 If you notice no wrapping, add this to your _.emacs_:
@@ -226,6 +228,8 @@ If you notice no wrapping, add this to your _.emacs_:
 (add-hook 'eshell-mode-hook 'visual-line-mode)
 ```
 4. In some cases, you might want to jump to a specific terminal buffer. If you have many buffers on the screen, using _other-window_ (bound to _C-x o_) is inefficient. You can install packages [window-number](https://github.com/nikolas/window-number) or [ace-jump-mode](https://github.com/winterTTr/ace-jump-mode/) to efficiently move between windows. To be able to undo changes in window configuration, enable _winner-mode_.
+
+5. TRAMP (Transparent Remote (file) Access, Multiple Protocol) mode in Emacs provides features for working with files stored on remote nodes.
 
 <br>
 <hr>
@@ -235,13 +239,13 @@ If you notice no wrapping, add this to your _.emacs_:
 ## gdb ##
 For this example, suppose our distributed program has a rare non-deterministic bug. In the buggy execution, all nodes hang while in the correct execution, they all exit cleanly before 20 seconds. We don't want to manually run each execution inside gdb using multi-run in hopes of hitting a buggy run. Instead, we can use multi-run-loop to start a loop running the program in gdb. The good thing is that when the program hits the bug, successive loop iterations have no effect since the previous iteration is not complete. This means that you can leaeve the loop running in the background and check periodically if the bug has been triggered.
 
-The following video shows exactly this. I start a loop running 200 iterations with a 25 second delay. The buggy execution is triggered in the 85^th iteration of the loop, after more than 35 minutes.
+The following video shows exactly this. I start a loop running 200 iterations with a 25 second delay. The buggy execution is triggered in the 85^th iteration of the loop, after more than 35 minutes. I then debug in gdb after aborting the loop and interrupting the program.
 
 [![multi-run-loop](https://img.youtube.com/vi/t5SYBEicqsw/0.jpg)](https://www.youtube.com/watch?v=t5SYBEicqsw)
 
 Similarly, programs can be run in a loop (with or without gdb) to
 loosely verify that they are working every time. But, what if the
-programs do not exit and enter an infinite loop instead? You can
+programs do not exit in a correct execution, but enter an infinite loop instead? You can
 interleave a loop that runs _^C_ so that the next run can start!
 The ability to write a multi-run script expressing these timing
 constraints (for multiple loops) will be very helpful here. Eshell
@@ -261,10 +265,8 @@ I created some unconventional (sometimes amusing, somewhat creative) examples of
 # Conclusion #
 Development of _multi-run_ has been guided by my use cases. I hope you like the package. If you have ideas on how to improve it, send me an email at [srj57@cornell.edu](mailto:srj57@cornell.edu).
 
-I wrote the first draft back in April 2016 with just one function multi-run. I added the delay commands in April 2017. I created the videos and applied for adding the package to MELPA in December 2017. The package was added to MELPA in January 2018 after some code cleaning/refactoring (thanks to Steve Purcell from MELPA). I released v1 right after in January. I wrote this blog and added the videos to YouTube during April and May 2018. You can find the full playlist of multi-run videos [here](https://www.youtube.com/playlist?list=PLuorXJMjI9I34tfnJaIV9IalE0UBXB0VF).
+I wrote the first draft back in April 2016 with just one function multi-run. I added the delay commands in April 2017. I created the videos and applied for adding the package to MELPA in December 2017. The package was added to MELPA in January 2018 after some code cleaning/refactoring (thanks to Steve Purcell from MELPA). I released v1 right after in January. I wrote this blog and added the videos to YouTube during April and May 2018. You can find the full playlist of multi-run videos [here](https://www.youtube.com/playlist?list=PLuorXJMjI9I34tfnJaIV9IalE0UBXB0VF). After having used Emacs for more than 6 years, I am pleased to have contributed something back to it.
 
-Some people have argued against using emacs shells, specially eshell, for some justifiable reasons. Hopefully, this article makes a case for using eshell by showing how easily it integrates with Emacs. multi-run is just 245 lines of emacs-lisp including comments and newlines. Increasing interest in eshell will hopefully lead to a better documentation of the library and improved features.
+Some people have argued against using emacs shells, specially eshell, for some justifiable reasons. eshell is not very well documented and many of its features can be improved. Hopefully, this article makes a case for using eshell by showing how easily it integrates with Emacs. multi-run is just 245 lines of emacs-lisp including comments and newlines.
 
 If you use Emacs for basic editing (and/or for writing code, latex, emails etc.), you should consider switching to using terminals inside Emacs. I believe this will integrate better with your workflow, specially if you mix writing code and running shell commands.
-
-Finally, if you don't use Emacs, you should!

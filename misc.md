@@ -1,10 +1,10 @@
 ---
-layout: default
+layout: 
 ---
 
 # Miscellaneous Examples #
 ## Difference between using term and eshell ##
-All eshell terminals are run by Emacs (single-process). The bash emulators are run as a different processes instead. This can matter, for example, when running the command _sl_ (steam locomotive) using multi_run:
+All eshell terminals are run by Emacs (single-process). Each bash emulator, however, is run as a different process. This can matter, for example, when running the command _sl_ (steam locomotive) using multi_run:
 
 [![multi-run-loop](https://img.youtube.com/vi/L1-uOG-n8n0/0.jpg)](https://www.youtube.com/watch?v=L1-uOG-n8n0)
 
