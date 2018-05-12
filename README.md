@@ -173,7 +173,7 @@ multi-run is just a wrapper around Emacs supported terminals. And Emacs supports
 
 The following image contrasts syntax coloring in eshell (left) vs term (right):
 
-![](/docs/mr_syntax_coloring.png?raw=true)
+![]({{ site.baseurl }}/docs/mr_syntax_coloring.png?raw=true)
 *Syntax coloring - eshell vs term*
 
 multi-run supports _term_, _multi-term_, _ansi-term_ and _shell_ apart from _eshell_. To change the terminal type, set the variable _multi-run-term-type_.
@@ -225,7 +225,7 @@ to the _.emacs_ file. If you are installing manually this way, you will also hav
 3. Since you are likely going to work with many windows (buffers on the screen), turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.\\
 The following image shows the difference. In the left half, entire directory contents are not visible because of no line wrapping.
 
-![](/docs/before_and_after_visual_line_mode.png?raw=true)
+![]({{ site.baseurl }}/docs/before_and_after_visual_line_mode.png?raw=true)
 *Before and after visual line mode - without line wrapping, entire directory contents are not visible*
 
 If you notice no wrapping, add this to your _.emacs_:

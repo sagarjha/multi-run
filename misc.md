@@ -23,24 +23,24 @@ I like the idea of using games to illustrate a concept. The best I can think of 
 
 The following is an illustration of the gameplay, walking through solving one instance of the game:
 
-![](/docs/sync_esc_1.png?raw=true)
+![]({{ site.baseurl }}/docs/sync_esc_1.png?raw=true)
 *The starting position*
 
 All the four players need to simultaneously reach the goal. We first take one step to the right (multi-run "R").
 
-![](/docs/sync_esc_2.png?raw=true)
+![]({{ site.baseurl }}/docs/sync_esc_2.png?raw=true)
 *one step to the right*
 
 After that, they all take one step down.
 
-![](/docs/sync_esc_3.png?raw=true)
+![]({{ site.baseurl }}/docs/sync_esc_3.png?raw=true)
 *one step down*
 
 Notice that the action has no effect on players 2 and 4 because they can't move down.
 
 Similarly, the sequence of steps "RDDLLU" from here wiill ensure that all players reach the goal simultaneously.
 
-![](/docs/sync_esc_9.png?raw=true)
+![]({{ site.baseurl }}/docs/sync_esc_9.png?raw=true)
 *solved*
 
-<a href="/" target="_self">back</a>
+<a href="{{ site.baseurl }}/" target="_self">back</a>
