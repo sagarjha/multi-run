@@ -215,7 +215,7 @@ to the _.emacs_ file. If you are installing manually this way, you will also hav
 2. Every one of multi-run functions has a prefix of multi-run- in its name. This branding is necessary to avoid name collisions as emacs-lisp does not support namespaces. You can define shorthands to these functions, for example, _run_ for _multi-run_, _configure-terminals_ for _multi-run-configure-terminals_ etc. provided the shorthands do not collide with existing names. You can add these in your _.emacs_ file. For example,
 ```emacs-lisp
 (defalias 'run 'multi-run)
-(defalias 'configure-terminals 'mr-configure-terminals)
+(defalias 'configure-terminals 'multi-run-configure-terminals)
 (defalias 'run-ssh 'multi-run-ssh)
 (defalias 'kill-timers 'multi-run-kill-all-timers)
 (defalias 'kill-terminals 'multi-run-kill-terminals)
