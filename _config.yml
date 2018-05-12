@@ -8,6 +8,7 @@ title: multi-run
 email: sjsagarjha3@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   multi-run is an emacs package that manages multiple terminals and runs commands in them.
+baseurl: /multi-run
 show_downloads: true
 
 plugins:
