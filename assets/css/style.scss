@@ -35,3 +35,19 @@ h2.nocount:before{
 hr {
     border-color: #1f75fe;
 }
+
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+img + em {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    text-align: center;
+    color: teal;
+}

@@ -27,7 +27,7 @@ The rest of this blog goes in depth on how to use the tool, with embedded screen
 <br>
 
 # Features #
-_multi-run_, written in _emacs-lisp_, is a thin wrapper around Emacs terminals. Its functions can be run as commands in an _eshell_ buffer (it's better to designate a terminal for this, called the <span style="color:teal"> _master_ _terminal_ </span> from now on). For a primer on how to use eshell effectively, see 
+multi-run, written in _emacs-lisp_, is a thin wrapper around Emacs terminals. Its functions can be run as commands in an _eshell_ buffer (it's better to designate a terminal for this, called the <span style="color:teal"> _master_ _terminal_ </span> from now on). For a primer on how to use eshell effectively, see 
 [this](https://www.masteringemacs.org/article/complete-guide-mastering-eshell).
 
 ## Creating terminals ##
@@ -106,7 +106,7 @@ The following video shows examples of SSHing to nodes and changing active termin
 [![multi-run-ssh-and-terminals-list](https://img.youtube.com/vi/KuyNbuuKlj4/0.jpg)](https://www.youtube.com/watch?v=KuyNbuuKlj4)
 
 ## Aborting commands ##
-Consistent with our philosophy, we absolutely don't want to visit every terminal to abort commands (C-c C-c in eshell, similar to sending SIGINT by _Ctrl-C_). So, how to pass control characters such as _^C, ^D_ to the terminals? Fortunately, Emacs provides the function _quoted-insert_ (bound to _C-q_ by default). So the command_C-q C-c_ will insert _^C_ in any emacs buffer. Accordingly, the command
+Consistent with our philosophy, we absolutely don't want to visit every terminal to abort commands (C-c C-c in eshell, similar to sending SIGINT by _Ctrl-C_). So, how to pass control characters such as _^C, ^D_ to the terminals? Fortunately, Emacs provides the function _quoted-insert_ (bound to _C-q_ by default). So the command_C-q C-c_ will insert ^C in any emacs buffer. Accordingly, the command
 
 ``` emacs-lisp
 multi-run ^C
@@ -137,7 +137,7 @@ multi-run provides the function _multi-run-wth-delay_, that introduces a delay b
 
 For example, if you run _multi-run-with-delay 0.3 cmd_, it will run _cmd_ in terminal 1 immediately, in terminal 2 at 0.3 seconds, in terminal 3 at 0.6 seconds and so on. If multiple commands are provided as arguments, the second command will run after the first command has been run at all the terminals.
 
-There's a variant of this called _multi-run-with-delay2_. It has the same arguments, but runs each command in every terminal at the same time. The delay is only applied between command executions.
+There's a variant of this called _multi-run-with-delay2_ (for lack of a better name). It has the same arguments, but runs each command in every terminal at the same time. The delay is only applied between command executions.
 
 ## Loops ##
 A command can be run multiple times in a loop with the function _multi-run-loop_:
@@ -147,13 +147,13 @@ A command can be run multiple times in a loop with the function _multi-run-loop_
   "Loop CMD given number of TIMES with DELAY between successive run(s)." ...)
 ```
 
-In every invocation of the loop, _cmd_ will run in all terminals (equivalent to _multi_run cmd_). The delay is applied between different loop invocations.
+In every invocation of the loop, _cmd_ will run in all terminals (equivalent to _multi-run cmd_). The delay is applied between different loop invocations.
 
 The reason we need to provide a delay is that in general, it is not possible to know from emacs when the commands have finished executing. This limitation forces the user to provide an upper-bounds on the execution times of the commands. In many cases, even running commands without delay is not an issue if the commands are successfully queued up and run later by the terminal (depends on the terminal type you're working with). Loops can help in finding non-deterministic bugs and running performance/correctness tests, something we will see later in more detail.
 
-Just like in _multi_run_, the command can be a string or a lambda function. The lambda function is called with the terminal number to obtain the command string. With some familiarity with emacs-lisp, it is possible to write more sophisticated functions that manage state internally to make use of other parameters such as the iteration number.
+Just like in _multi-run_, the command can be a string or a lambda function. The lambda function is called with the terminal number to obtain the command string. With some familiarity with emacs-lisp, it is possible to write more sophisticated functions that manage state internally to make use of other parameters such as the iteration number.
 
-So how does one abort loops? With the delay and loop functions, _multi_run_ registers multiple timers with emacs that run the commands in the future. The timer references are stored internally by _multi_run_ so that it can later ask emacs to cancel them. Consequently, the function _multi-run-kill-all-timers_ aborts all commands that were scheduled to run in the future. This is specially handy when you start a wrong command in a loop.
+So how does one abort loops? With the delay and loop functions, multi-run registers multiple timers with emacs that run the commands in the future. The timer references are stored internally by multi-run so that it can later ask emacs to cancel them. Consequently, the function _multi-run-kill-all-timers_ aborts all commands that were scheduled to run in the future. This is specially handy when you start a wrong command in a loop.
 
 ```emacs-lisp
 (defun multi-run-kill-all-timers ()
@@ -165,14 +165,16 @@ The following video shows the basic features of running a simple command in a lo
 [![multi-run-loop](https://img.youtube.com/vi/lnIQst7yqKM/0.jpg)](https://www.youtube.com/watch?v=lnIQst7yqKM)
 
 ## Terminal types ##
-multi_run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including bash emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the above types. I highly recommend using the default type eshell, however, you might want to use a bash emulator because:
+multi-run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including bash emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the above types. I highly recommend using the default type eshell, however, you might want to use a bash emulator because:
 1. eshell has its own idiomatic way of using it that can take time getting used to. For example, its tab completion, command search in history etc. work differently.
 2. eshell is not an emulation of bash. "Most" bash commands are supported and will work as expected. Furthermore, eshell does not support input redirection.
 <br>Both these points aren't much relevant if you are working on remote nodes, because then you will be using SSH which will run bash (or equivalent) inside the eshell terminal.
 3. eshell integration with shell processes is not satisfactory. You will not be able to access command history or use tab-completion in SSH.
 
 The following image contrasts syntax coloring in eshell (left) vs term (right):
-![Alt text](docs/mr_syntax_coloring.png?raw=true "Syntax coloring - eshell vs term")
+
+![](/docs/mr_syntax_coloring.png?raw=true)
+*Syntax coloring - eshell vs term*
 
 multi-run supports _term_, _multi-term_, _ansi-term_ and _shell_ apart from _eshell_. To change the terminal type, set the variable _multi-run-term-type_.
 
@@ -210,7 +212,7 @@ to the _.emacs_ file. If you are installing manually this way, you will also hav
   '(eshell-scroll-to-bottom-on-output (quote all))
   '(term-scroll-to-bottom-on-output (quote all)))
 ```
-2. Every one of multi-run functions has a prefix of _multi-run-_ in its name. This branding is necessary to avoid name collisions as emacs-lisp does not support namespaces. You can define shorthands to these functions, for example, _run_ for _multi-run_, _configure-terminals_ for _multi-run-configure-terminals_ etc. provided the shorthands do not collide with existing names. You can add these in your _.emacs_ file. For example,
+2. Every one of multi-run functions has a prefix of multi-run- in its name. This branding is necessary to avoid name collisions as emacs-lisp does not support namespaces. You can define shorthands to these functions, for example, _run_ for _multi-run_, _configure-terminals_ for _multi-run-configure-terminals_ etc. provided the shorthands do not collide with existing names. You can add these in your _.emacs_ file. For example,
 ```emacs-lisp
 (defalias 'run 'multi-run)
 (defalias 'configure-terminals 'mr-configure-terminals)
@@ -222,7 +224,10 @@ to the _.emacs_ file. If you are installing manually this way, you will also hav
 ```
 3. Since you are likely going to work with many windows (buffers on the screen), turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.\\
 The following image shows the difference. In the left half, entire directory contents are not visible because of no line wrapping.
-![Alt text](docs/before_and_after_visual_line_mode.png?raw=true "Before and after visual line mode - without line wrapping, entire directory contents are not visible")
+
+![](/docs/before_and_after_visual_line_mode.png?raw=true)
+*Before and after visual line mode - without line wrapping, entire directory contents are not visible*
+
 If you notice no wrapping, add this to your _.emacs_:
 ```
 (add-hook 'eshell-mode-hook 'visual-line-mode)
@@ -243,14 +248,7 @@ The following video shows exactly this. I start a loop running 200 iterations wi
 
 [![multi-run-loop](https://img.youtube.com/vi/t5SYBEicqsw/0.jpg)](https://www.youtube.com/watch?v=t5SYBEicqsw)
 
-Similarly, programs can be run in a loop (with or without gdb) to
-loosely verify that they are working every time. But, what if the
-programs do not exit in a correct execution, but enter an infinite loop instead? You can
-interleave a loop that runs _^C_ so that the next run can start!
-The ability to write a multi-run script expressing these timing
-constraints (for multiple loops) will be very helpful here. Eshell
-provides a scripting functionality; I am going to look into how
-multi-run can integrate nicely with it.
+Similarly, programs can be run in a loop (with or without gdb) to loosely verify that they are working every time. But, what if the programs do not exit in a correct execution, but enter an infinite loop instead? You can interleave a loop that runs ^C so that the next run can start!  The ability to write a multi-run script expressing these timing constraints (for multiple loops) will be very helpful here. Eshell provides a scripting functionality; I am going to look into how multi-run can integrate nicely with it.
 
 ## Performance tests ##
 In pretty much the same way, you can write functions that cycle through the parameters and produce commands for each set of parameters. Then you can run those functions with _multi-run-loop_. Scripts can do the same thing, but with multi-run you will have more information if something goes wrong. You can also combine running performance tests with processing data in emacs-lisp and plotting the results.
@@ -263,7 +261,7 @@ I created some unconventional (sometimes amusing, somewhat creative) examples of
 <br>
 
 # Conclusion #
-Development of _multi-run_ has been guided by my use cases. I hope you like the package. If you have ideas on how to improve it, send me an email at [srj57@cornell.edu](mailto:srj57@cornell.edu).
+Development of multi-run has been guided by my use cases. I hope you like the package. If you have ideas on how to improve it, send me an email at [srj57@cornell.edu](mailto:srj57@cornell.edu).
 
 I wrote the first draft back in April 2016 with just one function multi-run. I added the delay commands in April 2017. I created the videos and applied for adding the package to MELPA in December 2017. The package was added to MELPA in January 2018 after some code cleaning/refactoring (thanks to Steve Purcell from MELPA). I released v1 right after in January. I wrote this blog and added the videos to YouTube during April and May 2018. You can find the full playlist of multi-run videos [here](https://www.youtube.com/playlist?list=PLuorXJMjI9I34tfnJaIV9IalE0UBXB0VF). After having used Emacs for more than 6 years, I am pleased to have contributed something back to it.
 

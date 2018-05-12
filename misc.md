@@ -1,5 +1,5 @@
 ---
-layout: 
+layout: default
 ---
 
 # Miscellaneous Examples #
@@ -18,7 +18,29 @@ I was running some experiments on the Stampede supercomputing cluster on up to 1
 
 [![multi-run-loop](https://img.youtube.com/vi/dMCzSSc4Gz8/0.jpg)](https://www.youtube.com/watch?v=dMCzSSc4Gz8)
 
-## Game Idea ##
-I like the idea of using games to illustrate a concept. More on this later.
+## Game Idea: Synchronous Escape ##
+I like the idea of using games to illustrate a concept. The best I can think of is a maze problem where you have multiple mazes and the goal is to exit all the mazes simultaneously by using the same set of movement commands (L, R, U, D). When a movement command cannot be executed in a maze, the player remains in the same position in that maze, but its position in the other mazes can still change. This game can be played (conceptually, not implemented yet) using multi-run with a terminal for each maze and the movement commands communicated by running them through multi-run. I call this game <span style="color:teal"> _**synchronous escape**_ </span>. Even though this is decidable, it is inspired by the undecidable Post correspondence problem.
 
-<a href="./" target="_self">back</a>
+The following is an illustration of the gameplay, walking through solving one instance of the game:
+
+![](/docs/sync_esc_1.png?raw=true)
+*The starting position*
+
+All the four players need to simultaneously reach the goal. We first take one step to the right (multi-run "R").
+
+![](/docs/sync_esc_2.png?raw=true)
+*one step to the right*
+
+After that, they all take one step down.
+
+![](/docs/sync_esc_3.png?raw=true)
+*one step down*
+
+Notice that the action has no effect on players 2 and 4 because they can't move down.
+
+Similarly, the sequence of steps "RDDLLU" from here wiill ensure that all players reach the goal simultaneously.
+
+![](/docs/sync_esc_9.png?raw=true)
+*solved*
+
+<a href="/" target="_self">back</a>
