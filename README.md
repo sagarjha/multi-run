@@ -106,7 +106,7 @@ The following video shows examples of SSHing to nodes and changing active termin
 [![multi-run-ssh-and-terminals-list](https://img.youtube.com/vi/KuyNbuuKlj4/0.jpg)](https://www.youtube.com/watch?v=KuyNbuuKlj4)
 
 ## Aborting commands ##
-Consistent with our philosophy, we absolutely don't want to visit every terminal to abort commands (C-c C-c in eshell, similar to sending SIGINT by _Ctrl-C_). So, how to pass control characters such as _^C, ^D_ to the terminals? Fortunately, Emacs provides the function _quoted-insert_ (bound to _C-q_ by default). So the command_C-q C-c_ will insert ^C in any emacs buffer. Accordingly, the command
+Consistent with our philosophy, we absolutely don't want to visit every terminal to abort commands (C-c C-c in eshell, similar to sending SIGINT by _Ctrl-C_). So, how to pass control characters such as _^C, ^D_ to the terminals? Fortunately, Emacs provides the function _quoted-insert_ (bound to _C-q_ by default). So the command _C-q C-c_ will insert ^C in any emacs buffer. Accordingly, the command
 
 ``` emacs-lisp
 multi-run ^C
