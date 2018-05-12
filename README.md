@@ -149,7 +149,7 @@ A command can be run multiple times in a loop with the function _multi-run-loop_
 
 In every invocation of the loop, _cmd_ will run in all terminals (equivalent to _multi-run cmd_). The delay is applied between different loop invocations.
 
-The reason we need to provide a delay is that in general, it is not possible to know from emacs when the commands have finished executing. This limitation forces the user to provide an upper-bounds on the execution times of the commands. In many cases, even running commands without delay is not an issue if the commands are successfully queued up and run later by the terminal (depends on the terminal type you're working with). Loops can help in finding non-deterministic bugs and running performance/correctness tests, something we will see later in more detail.
+The reason we need to provide a delay is that in general, it is not possible to know from emacs when the commands have finished executing. This limitation forces the user to provide an upper-bound on the execution times of the commands. In many cases, even running commands without delay is not an issue if the commands are successfully queued up and run later by the terminal (depends on the terminal type you're working with). Loops can help in finding non-deterministic bugs and running performance/correctness tests, something we will see later in more detail.
 
 Just like in _multi-run_, the command can be a string or a lambda function. The lambda function is called with the terminal number to obtain the command string. With some familiarity with emacs-lisp, it is possible to write more sophisticated functions that manage state internally to make use of other parameters such as the iteration number.
 
