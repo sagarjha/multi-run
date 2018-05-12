@@ -127,7 +127,7 @@ multi-run ^D
 ```
 
 ## Commands with delay ##
-multi-run provides the function _multi-run-wth-delay_, that introduces a delay between executing a command at different terminals.
+multi-run provides the function _multi-run-with-delay_, that introduces a delay between executing a command at different terminals.
 
 ```emacs-lisp
 (defun multi-run-with-delay (delay &rest cmd)
@@ -241,7 +241,7 @@ If you notice no wrapping, add this to your _.emacs_:
 
 # Advanced examples #
 ## gdb ##
-For this example, suppose our distributed program has a rare non-deterministic bug. In the buggy execution, all nodes hang while in the correct execution, they all exit cleanly before 20 seconds. We don't want to manually run each execution inside gdb using multi-run in hopes of hitting a buggy run. Instead, we can use multi-run-loop to start a loop running the program in gdb. The good thing is that when the program hits the bug, successive loop iterations have no effect since the previous iteration is not complete. This means that you can leaeve the loop running in the background and check periodically if the bug has been triggered.
+For this example, suppose our distributed program has a rare non-deterministic bug. In the buggy execution, all nodes hang while in the correct execution, they all exit cleanly before 20 seconds. We don't want to manually run each execution inside gdb using multi-run in hopes of hitting a buggy run. Instead, we can use multi-run-loop to start a loop running the program in gdb. The good thing is that when the program hits the bug, successive loop iterations have no effect since the previous iteration is not complete. This means that you can leave the loop running in the background and check periodically if the bug has been triggered.
 
 The following video shows exactly this. I start a loop running 200 iterations with a 25 second delay. The buggy execution is triggered in the 85^th iteration of the loop, after more than 35 minutes. I then debug in gdb after aborting the loop and interrupting the program.
 

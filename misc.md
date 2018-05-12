@@ -38,7 +38,7 @@ After that, they all take one step down.
 
 Notice that the action has no effect on players 2 and 4 because they can't move down.
 
-Similarly, the sequence of steps "RDDLLU" from here wiill ensure that all players reach the goal simultaneously.
+Similarly, the sequence of steps "RDDLLU" from here will ensure that all players reach the goal simultaneously.
 
 ![]({{ site.baseurl }}/docs/sync_esc_9.png?raw=true)
 *solved*
