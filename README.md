@@ -222,16 +222,15 @@ to the _.emacs_ file. If you are installing manually this way, you will also hav
 (defalias 'run-loop 'multi-run-loop)
 (defalias 'run-with-delay 'multi-run-with-delay)
 ```
-3. Since you are likely going to work with many windows (buffers on the screen), turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.\\
+3. Since you are likely going to work with many windows (buffers on the screen), turning on _visual-line-mode_ is a good idea. It will wrap words around the window edges so that you can look at the entire output.<br>
 The following image shows the difference. In the left half, entire directory contents are not visible because of no line wrapping.
-
 ![]({{ site.baseurl }}/docs/before_and_after_visual_line_mode.png?raw=true)
-*Before and after visual line mode - without line wrapping, entire directory contents are not visible*
-
+*Before and after visual line mode - without line wrapping, entire directory contents are not visible*<br>
 If you notice no wrapping, add this to your _.emacs_:
 ```
 (add-hook 'eshell-mode-hook 'visual-line-mode)
 ```
+
 4. In some cases, you might want to jump to a specific terminal buffer. If you have many buffers on the screen, using _other-window_ (bound to _C-x o_) is inefficient. You can install packages [window-number](https://github.com/nikolas/window-number) or [ace-jump-mode](https://github.com/winterTTr/ace-jump-mode/) to efficiently move between windows. To be able to undo changes in window configuration, enable _winner-mode_.
 
 5. TRAMP (Transparent Remote (file) Access, Multiple Protocol) mode in Emacs provides features for working with files stored on remote nodes.
