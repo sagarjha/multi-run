@@ -1,5 +1,5 @@
 # Introduction #
-_Emacs_ supports multiple terminal types including bash emulators (term, ansi-term), shell and eshell. Using terminals inside Emacs helps one avoid the need to switch environments for running shell commands. Refer to [mastering emacs](https://www.masteringemacs.org/article/running-shells-in-emacs-overview) for an excellent overview of using terminals in Emacs.
+_Emacs_ supports multiple terminal types including terminal emulators (term, ansi-term), shell and eshell. Using terminals inside Emacs helps one avoid the need to switch environments for running shell commands. Refer to [mastering emacs](https://www.masteringemacs.org/article/running-shells-in-emacs-overview) for an excellent overview of using terminals in Emacs.
 
 While this is great, Emacs lacks support for managing multiple terminals. I often need to work with many remote nodes at the same time. My example use-cases include:
 1. <span style="color:orange">Synchronizing state:</span> Updating repos, building binaries, cd'ing to the right directories etc. on the remote nodes.
@@ -165,9 +165,9 @@ The following video shows the basic features of running a simple command in a lo
 [![multi-run-loop](https://img.youtube.com/vi/lnIQst7yqKM/0.jpg)](https://www.youtube.com/watch?v=lnIQst7yqKM)
 
 ## Terminal types ##
-multi-run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including bash emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the above types. I highly recommend using the default type eshell, however, you might want to use a bash emulator because:
-1. eshell has its own idiomatic way of using it that can take time getting used to. For example, its tab completion, command search in history etc. work differently.
-2. eshell is not an emulation of bash. "Most" bash commands are supported and will work as expected. Furthermore, eshell does not support input redirection.
+multi-run is just a wrapper around Emacs supported terminals. And Emacs supports multiple terminal types including terminal emulators (term, multi-term, ansi-term) and emacs shells (shell, eshell). The terminal running the multi-run commands must be _eshell_ (or any elisp shell), but the target terminals can be any of the above types. I highly recommend using the default type eshell, however, you might want to use term/ansi-term because:
+1. Learning to use eshell effectively can take time. eshell's tab completion, command search in history etc. work differently.
+2. eshell does not support input redirection.
 <br>Both these points aren't much relevant if you are working on remote nodes, because then you will be using SSH which will run bash (or equivalent) inside the eshell terminal.
 3. eshell integration with shell processes is not satisfactory. You will not be able to access command history or use tab-completion in SSH.
 
