@@ -99,7 +99,6 @@
         (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term")))
       (rename-buffer (multi-run-get-buffer-name term-num)))))
 
-;; run a command on a single terminal
 (defun multi-run-on-single-terminal (command term-num)
   "Run the command COMMAND on a single terminal with number TERM-NUM."
   (set-buffer (multi-run-get-buffer-name term-num))
@@ -107,7 +106,6 @@
   (insert command)
   (funcall (multi-run-get-input-function)))
 
-;; run a command on multiple terminals
 (defun multi-run-on-terminals (command term-nums &optional delay)
   "Run the COMMAND on terminals in TERM-NUMS with an optional DELAY between running on successive terminals."
   (let ((delay (if delay delay 0))
@@ -218,12 +216,17 @@
                                                        nil '(lambda (cmd) (multi-run cmd)) cmd) multi-run-timers-list))
         (setq delay-cnt (1+ delay-cnt))))))
 
-;; convenience function for ssh'ing to the terminals
 (defun multi-run-ssh (&optional terminal-num)
   "Establish ssh connections in the terminals (or on terminal number TERMINAL-NUM) with the help of user-defined variables."
   (multi-run-on-terminals (lambda (x) (concat "ssh " (if multi-run-ssh-username
 							 (concat multi-run-ssh-username "@") "")
 					      (elt multi-run-hostnames-list (- x 1)))) (if terminal-num (list terminal-num) multi-run-terminals-list)))
+
+(defun multi-run-find-file (file-path &optional terminal-num)
+  "Open file specified by FILE-PATH for all terminals or only for TERMINAL-NUM."
+  (mapc (lambda (x) (find-file (concat "/ssh:" (if multi-run-ssh-username
+						   (concat multi-run-ssh-username "@") "")
+				       (elt multi-run-hostnames-list (- x 1)) ":" file-path))) (if terminal-num (list terminal-num) multi-run-terminals-list)))
 
 (defun multi-run-kill-terminals (&optional terminal-num)
   "Kill terminals (or the optional terminal TERMINAL-NUM)."
