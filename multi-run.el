@@ -97,8 +97,7 @@
         ('term (term "/bin/bash"))
         ('multi-term (multi-term))
         (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term")))
-      (rename-buffer (multi-run-get-buffer-name term-num))))
-  (switch-to-buffer (multi-run-get-buffer-name term-num)))
+      (rename-buffer (multi-run-get-buffer-name term-num)))))
 
 ;; run a command on a single terminal
 (defun multi-run-on-single-terminal (command term-num)
