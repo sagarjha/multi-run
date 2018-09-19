@@ -222,13 +222,15 @@
 							 (concat multi-run-ssh-username "@") "")
 					      (elt multi-run-hostnames-list (- x 1)))) (if terminal-num (list terminal-num) multi-run-terminals-list)))
 
-(defun multi-run-find-file (file-path &optional window-batch)
-  "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot."
-  (let* ((window-batch (if window-batch window-batch 5))
+(defun multi-run-find-remote-files-sudo (file-path &optional window-batch non-root)
+  "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot.  Open with sudo if NON-ROOT is false."
+  (let* ((non-root (if non-root non-root nil))
+	 (window-batch (if window-batch window-batch 5))
 	 (master-buffer-name (buffer-name))
 	 (buffer-vector (vconcat (mapcar (lambda (x) (find-file (concat "/ssh:" (if multi-run-ssh-username
 										    (concat multi-run-ssh-username "@") "")
-									(elt multi-run-hostnames-list (- x 1)) ":" file-path))) multi-run-terminals-list)))
+									(elt multi-run-hostnames-list (- x 1)) (if (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))) "")
+									":" file-path))) multi-run-terminals-list)))
 	 (num-terminals (length multi-run-terminals-list))
 	 (sym-vec (multi-run-make-symbols num-terminals "file"))
 	 (buffer-dict (cons (list :name (aref sym-vec 0)
@@ -242,6 +244,10 @@
      buffer-dict)
     (select-window (get-buffer-window master-buffer-name)))
   nil)
+
+(defun multi-run-find-remote-files (file-path &optional window-batch)
+  "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot."
+  (multi-run-find-remote-files-sudo file-path window-batch 't))
 
 (defun multi-run-kill-terminals (&optional terminal-num)
   "Kill terminals (or the optional terminal TERMINAL-NUM)."
