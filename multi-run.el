@@ -216,11 +216,11 @@
                                                        nil '(lambda (cmd) (multi-run cmd)) cmd) multi-run-timers-list))
         (setq delay-cnt (1+ delay-cnt))))))
 
-(defun multi-run-ssh (&optional terminal-num)
-  "Establish ssh connections in the terminals (or on terminal number TERMINAL-NUM) with the help of user-defined variables."
+(defun multi-run-ssh ()
+  "Establish ssh connections in the terminals with the help of user-defined variables."
   (multi-run-on-terminals (lambda (x) (concat "ssh " (if multi-run-ssh-username
 							 (concat multi-run-ssh-username "@") "")
-					      (elt multi-run-hostnames-list (- x 1)))) (if terminal-num (list terminal-num) multi-run-terminals-list)))
+					      (elt multi-run-hostnames-list (- x 1)))) multi-run-terminals-list))
 
 (defun multi-run-find-remote-files-sudo (file-path &optional window-batch non-root)
   "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot.  Open with sudo if NON-ROOT is false."
@@ -249,11 +249,9 @@
   "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot."
   (multi-run-find-remote-files-sudo file-path window-batch 't))
 
-(defun multi-run-kill-terminals (&optional terminal-num)
-  "Kill terminals (or the optional terminal TERMINAL-NUM)."
-  (if terminal-num
-      (kill-buffer (multi-run-get-buffer-name terminal-num))
-    (mapc (lambda (terminal-num) (kill-buffer (multi-run-get-buffer-name terminal-num))) multi-run-terminals-list))
+(defun multi-run-kill-terminals ()
+  "Kill active terminals."
+  (mapc (lambda (terminal-num) (kill-buffer (multi-run-get-buffer-name terminal-num))) multi-run-terminals-list)
   nil)
 
 (defun multi-run-kill-all-timers ()
