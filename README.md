@@ -259,6 +259,32 @@ I created some unconventional (sometimes amusing, somewhat creative) examples of
 <hr>
 <br>
 
+# New Features #
+Below is a list of new features that will be released in v2. They are available in master.
+
+## Opening Remote Files ##
+
+multi-run can open remote files using Emacs' TRAMP. The hostnames are taken from _multi-run-hostnames-list_ using indices from _multi-run-terminals-list_.
+
+``` emacs-lisp
+(defun multi-run-find-remote-files (file-path &optional window-batch)
+  "Open file specified by FILE-PATH for all terminals and display them on the screen
+  with WINDOW-BATCH number of them in one single vertical slot.")
+
+(defun multi-run-find-remote-files-sudo (file-path &optional window-batch non-root)
+  "Open file specified by FILE-PATH for all terminals and display them on the screen
+  with WINDOW-BATCH number of them in one single vertical slot.
+  Open with sudo if NON-ROOT is false.")
+```
+
+For example, running _(setq multi-run-terminals-list (list 1 3))_ followed by _multi-run-find-remote-files .ssh/config_ will open the _.ssh/config_ file on the first and third machines listed in _multi-run-hostnames-list_. The following video shows this in action:
+
+[![multi-run-loop](https://img.youtube.com/vi/0XFn9ZxvpUE/0.jpg)](https://www.youtube.com/watch?v=0XFn9ZxvpUE)
+
+<br>
+<hr>
+<br>
+
 # Conclusion #
 Development of multi-run has been guided by my use cases. I hope you like the package. If you have ideas on how to improve it, send me an email at [srj57@cornell.edu](mailto:srj57@cornell.edu).
 
