@@ -281,7 +281,7 @@ For example, running _(setq multi-run-terminals-list (list 1 3))_ followed by _m
 
 [![multi-find](https://img.youtube.com/vi/0XFn9ZxvpUE/0.jpg)](https://www.youtube.com/watch?v=0XFn9ZxvpUE)
 
-Please note that editing these files simultaneously is outside the scope of _multi-run_. Emacs macros or multiple-cursors-mode can help with this.
+Please note that editing these files simultaneously is outside the scope of _multi-run_. Emacs macros or multiple-cursors-mode can help with that.
 
 <br>
 <hr>
