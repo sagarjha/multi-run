@@ -279,7 +279,9 @@ multi-run can open remote files using Emacs' TRAMP. The hostnames are taken from
 
 For example, running _(setq multi-run-terminals-list (list 1 3))_ followed by _multi-run-find-remote-files .ssh/config_ will open the _.ssh/config_ file on the first and third machines listed in _multi-run-hostnames-list_. The following video shows this in action:
 
-[![multi-run-loop](https://img.youtube.com/vi/0XFn9ZxvpUE/0.jpg)](https://www.youtube.com/watch?v=0XFn9ZxvpUE)
+[![multi-find](https://img.youtube.com/vi/0XFn9ZxvpUE/0.jpg)](https://www.youtube.com/watch?v=0XFn9ZxvpUE)
+
+Please note that editing these files simultaneously is outside the scope of _multi-run_. Emacs macros or multiple-cursors-mode can help with this.
 
 <br>
 <hr>
