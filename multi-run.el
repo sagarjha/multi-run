@@ -227,9 +227,10 @@
   (let* ((non-root (if non-root non-root nil))
 	 (window-batch (if window-batch window-batch 5))
 	 (master-buffer-name (buffer-name))
-	 (buffer-vector (vconcat (mapcar (lambda (x) (find-file (concat "/ssh:" (if multi-run-ssh-username
-										    (concat multi-run-ssh-username "@") "")
-									(elt multi-run-hostnames-list (- x 1)) (if (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))) "")
+	 (buffer-vector (vconcat (mapcar (lambda (x) (find-file (concat "/ssh:" (when multi-run-ssh-username
+										  (concat multi-run-ssh-username "@"))
+									(elt multi-run-hostnames-list (- x 1))
+									(when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
 									":" file-path))) multi-run-terminals-list)))
 	 (num-terminals (length multi-run-terminals-list))
 	 (sym-vec (multi-run-make-symbols num-terminals "file"))
@@ -248,6 +249,33 @@
 (defun multi-run-find-remote-files (file-path &optional window-batch)
   "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot."
   (multi-run-find-remote-files-sudo file-path window-batch 't))
+
+(defun multi-run-copy-one-file-sudo (source-file destination-file-or-directory &optional non-root)
+  "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals.  Copy with sudo if NON-ROOT is false."
+  (mapc (lambda (x) (copy-file source-file (concat "/ssh:" (when multi-run-ssh-username
+							     (concat multi-run-ssh-username "@"))
+						   (elt multi-run-hostnames-list (- x 1))
+						   (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
+						   ":" destination-file-or-directory) 't))
+	multi-run-terminals-list))
+
+(defun multi-run-copy-one-file (source-file destination-file-or-directory)
+  "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals."
+  (multi-run-copy-one-file-sudo source-file destination-file-or-directory 't))
+
+(defun multi-run-copy-generic (copy-fun &rest files)
+  "Internal function.  Call COPY-FUN after parsing FILES."
+  (let ((destination-file-or-directory (car (last files)))
+	(source-files (reverse (cdr (reverse files)))))
+    (mapc (lambda (source-file) (funcall copy-fun source-file destination-file-or-directory)) source-files)))
+
+(defun multi-run-copy-sudo (file1 file-or-directory1 &rest files)
+  "Copy FILE1 to FILE-OR-DIRECTORY1.  With multiple arguments, the last element FILES is the destination directory, the rest are source files to copy."
+  (apply 'multi-run-copy-generic 'multi-run-copy-one-file-sudo file1 file-or-directory1 files))
+
+(defun multi-run-copy (file1 file-or-directory1 &rest files)
+  "Copy FILE1 to FILE-OR-DIRECTORY1.  With multiple arguments, the last element FILES is the destination directory, the rest are source files to copy."
+  (apply 'multi-run-copy-generic 'multi-run-copy-one-file file1 file-or-directory1 files))
 
 (defun multi-run-kill-terminals ()
   "Kill active terminals."
