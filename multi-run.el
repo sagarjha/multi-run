@@ -107,7 +107,8 @@
 (defun multi-run-find-remote-files-sudo (file-path &optional window-batch non-root)
   "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot.  Open with sudo if NON-ROOT is false."
   (let* ((non-root (if non-root non-root nil))
-	 (window-batch (if window-batch window-batch 5))
+	 (num-terminals (length multi-run-terminals-list))
+	 (window-batch (if window-batch window-batch (calculate-window-batch num-terminals)))
 	 (master-buffer-name (buffer-name))
 	 (master-buffer-symbol (make-symbol "master"))
 	 (buffer-vector (vconcat (mapcar
@@ -118,7 +119,6 @@
 								 (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
 								 ":" file-path)))
 				  multi-run-terminals-list)))
-	 (num-terminals (length multi-run-terminals-list))
 	 (sym-list (multi-run-make-symbols "file"))
 	 (buffer-dict (cons (list :name master-buffer-symbol
 				  :buffer master-buffer-name)
