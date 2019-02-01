@@ -45,24 +45,25 @@
 (defvar multi-run-ssh-username nil
   "SSH username for multi-run-ssh.")
 
-(defun multi-run-configure-terminals (num-terminals &optional window-batch)
-  "Lay out NUM-TERMINALS number of terminals on the screen with WINDOW-BATCH number of them in one single vertical slot."
-  (let* ((window-batch (if window-batch window-batch 5))
+(defun multi-run-configure-terminals (&optional num-terminals window-batch)
+  "Display NUM-TERMINALS number of terminals given by multi-run-terminals-list on the screen with WINDOW-BATCH number of them in one single vertical slot."
+  (let* ((num-terminals (if num-terminals (progn (setq multi-run-terminals-list (number-sequence 1 num-terminals)) num-terminals) (length multi-run-terminals-list)))
+	 (window-batch (if window-batch window-batch (calculate-window-batch num-terminals)))
 	 (master-buffer-name (buffer-name))
-	 (sym-vec (multi-run-make-symbols num-terminals "term"))
-	 (buffer-dict (cons (list :name (aref sym-vec 0)
+	 (master-buffer-symbol (make-symbol "master"))
+	 (sym-list (multi-run-make-symbols "term"))
+	 (buffer-dict (cons (list :name master-buffer-symbol
 				  :buffer master-buffer-name)
-			    (multi-run-make-dict num-terminals 'multi-run-get-buffer-name sym-vec)))
-	 (internal-recipe (multi-run-make-internal-recipe num-terminals window-batch sym-vec))
+			    (multi-run-make-dict 'multi-run-get-buffer-name sym-list)))
+	 (internal-recipe (multi-run-make-internal-recipe num-terminals window-batch (vconcat sym-list)))
 	 (overall-recipe `(- (:upper-size-ratio 0.9)
-			     ,internal-recipe ,(aref sym-vec 0))))
-    (multi-run-create-terminals num-terminals)
+			     ,internal-recipe ,master-buffer-symbol)))
+    (multi-run-create-terminals)
     (wlf:layout
      overall-recipe
      buffer-dict)
     (select-window (get-buffer-window master-buffer-name))
-    (setq multi-run-terminals-list (number-sequence 1 num-terminals))
-    (concat "Preemptively setting multi-run-terminals-list to " (prin1-to-string multi-run-terminals-list))))
+    (concat "multi-run-terminals-list is " (prin1-to-string multi-run-terminals-list))))
 
 (defun multi-run-with-delay (delay &rest cmd)
   "With the provided DELAY, run one or more commands CMD on multiple terminals - the delay is between running commands on different terminals."
@@ -108,19 +109,23 @@
   (let* ((non-root (if non-root non-root nil))
 	 (window-batch (if window-batch window-batch 5))
 	 (master-buffer-name (buffer-name))
-	 (buffer-vector (vconcat (mapcar (lambda (x) (find-file (concat "/ssh:" (when multi-run-ssh-username
-										  (concat multi-run-ssh-username "@"))
-									(elt multi-run-hostnames-list (- x 1))
-									(when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
-									":" file-path))) multi-run-terminals-list)))
+	 (master-buffer-symbol (make-symbol "master"))
+	 (buffer-vector (vconcat (mapcar
+				  (lambda (x) (find-file (concat "/ssh:"
+								 (when multi-run-ssh-username
+								   (concat multi-run-ssh-username "@"))
+								 (elt multi-run-hostnames-list (- x 1))
+								 (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
+								 ":" file-path)))
+				  multi-run-terminals-list)))
 	 (num-terminals (length multi-run-terminals-list))
-	 (sym-vec (multi-run-make-symbols num-terminals "file"))
-	 (buffer-dict (cons (list :name (aref sym-vec 0)
+	 (sym-list (multi-run-make-symbols "file"))
+	 (buffer-dict (cons (list :name master-buffer-symbol
 				  :buffer master-buffer-name)
-			    (multi-run-make-dict num-terminals (lambda (cnt) (aref buffer-vector (1- cnt))) sym-vec)))
-	 (internal-recipe (multi-run-make-internal-recipe num-terminals window-batch sym-vec))
+			    (multi-run-make-dict (lambda (cnt) (aref buffer-vector (1- cnt))) sym-list)))
+	 (internal-recipe (multi-run-make-internal-recipe num-terminals window-batch (vconcat sym-list)))
 	 (overall-recipe `(- (:upper-size-ratio 0.9)
-			     ,internal-recipe ,(aref sym-vec 0))))
+			     ,internal-recipe ,master-buffer-symbol)))
     (wlf:layout
      overall-recipe
      buffer-dict)

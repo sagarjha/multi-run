@@ -65,24 +65,28 @@
         (setq term-nums (cdr term-nums))
         (setq delay-cnt (1+ delay-cnt))))))
 
-(defun multi-run-create-terminals (num-terminals)
-  "Create NUM-TERMINALS number of terminals."
-  (dotimes (i num-terminals)
-    (multi-run-open-terminal (1+ i))))
+(defun multi-run-create-terminals ()
+  "Create terminals given by multi-run-terminals-list."
+  (mapc 'multi-run-open-terminal multi-run-terminals-list))
 
-(defun multi-run-make-vertical-or-horizontal-pane (num-terminals offset sym-vec choice)
-  "Helper function for multi-run-configure-terminals.  Create NUM-TERMINALS number of windows with buffer names given by OFFSET into SYM-VEC.  The windows are created in a single vertical or horizontal pane determined by CHOICE."
-  (if (= num-terminals 1) (aref sym-vec offset)
-    (list (if (= choice 0) '| '-) `(,(if (= choice 0) :left-size-ratio :upper-size-ratio)
-				    ,(/ (- num-terminals 1.0) num-terminals))
-	  (multi-run-make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) sym-vec choice) (aref sym-vec offset))))
+(defun calculate-window-batch (num-terminals)
+  "Calculate the window batch parameters for displaying NUM-TERMINALS."
+  (round (sqrt num-terminals))
+  )
+
+(defun multi-run-make-vertical-or-horizontal-pane (num-terminals offset sym-vec)
+  "Helper function for multi-run-configure-terminals.  Create NUM-TERMINALS number of windows with buffer names given by OFFSET into SYM-VEC in a single vertical pane."
+  (if (= num-terminals 1) (aref sym-vec (1- offset))
+    (list '- `(,:upper-size-ratio
+	       ,(/ (- num-terminals 1.0) num-terminals))
+	  (multi-run-make-vertical-or-horizontal-pane (1- num-terminals) (1- offset) sym-vec) (aref sym-vec (1- offset)))))
 
 (defun multi-run-make-internal-recipe (num-terminals window-batch sym-vec)
-  "Helper function for multi-run-configure-terminals.  Create a recipe for wlf:layout for NUM-TERMINALS number of terminal buffers with WINDOW-BATCH of them in one vertical pane.  Get symbol names for terminals from SYM-VEC."
-  (let ((num-panes (if (= (% num-terminals window-batch) 0)
-		       (/ num-terminals window-batch) (1+ (/ num-terminals window-batch)))))
+  "Create a recipe for wlf:layout for NUM-TERMINALS terminal buffers with WINDOW-BATCH of them in one vertical pane.  Get symbol names for terminals from SYM-VEC."
+  (let* ((num-panes (if (= (% num-terminals window-batch) 0)
+			(/ num-terminals window-batch) (1+ (/ num-terminals window-batch)))))
     (if (<= num-terminals window-batch)
-	(multi-run-make-vertical-or-horizontal-pane num-terminals num-terminals sym-vec 1)
+	(multi-run-make-vertical-or-horizontal-pane num-terminals num-terminals sym-vec)
       (list '| `(:left-size-ratio ,(/ (- num-panes 1.0) num-panes))
 	    (multi-run-make-internal-recipe (- num-terminals (if (= (% num-terminals window-batch) 0)
 								 window-batch
@@ -90,23 +94,17 @@
 					    window-batch sym-vec)
 	    (multi-run-make-vertical-or-horizontal-pane (if (= (% num-terminals window-batch) 0) window-batch
 							  (% num-terminals window-batch))
-							num-terminals sym-vec 1)))))
+							num-terminals sym-vec)))))
 
-(defun multi-run-make-symbols (num-terminals hint &optional cnt)
-  "Create unique symbols for NUM-TERMINALS number of terminals with common prefix HINT having created recursively symbols for CNT of them."
-  (unless cnt
-    (setq cnt 0))
-  (when (<= cnt num-terminals)
-    (vconcat (vector (make-symbol (concat hint (number-to-string cnt)))) (multi-run-make-symbols num-terminals hint (1+ cnt)))))
+(defun multi-run-make-symbols (hint)
+  "Create unique symbols for the terminals with common prefix HINT."
+  (mapcar (lambda (num) (make-symbol (concat hint (number-to-string num)))) multi-run-terminals-list))
 
-(defun multi-run-make-dict (num-terminals hint-fun sym-vec &optional cnt)
-  "Create a dictionary of terminal symbol names for NUM-TERMINALS number of terminals with names provided by HINT-FUN and symbols from SYM-VEC, having created recursively entries for CNT of them."
-  (unless cnt
-    (setq cnt 1))
-  (when (<= cnt num-terminals)
-    (cons (list :name (aref sym-vec cnt)
-		:buffer (funcall hint-fun cnt))
-	  (multi-run-make-dict num-terminals hint-fun sym-vec (1+ cnt)))))
+(defun multi-run-make-dict (hint-fun sym-list)
+  "Create a dictionary of terminal symbol names according to HINT-FUN and symbols from SYM-LIST."
+  (mapcar* (lambda (symbol num) (list :name symbol
+				      :buffer (funcall hint-fun num)))
+	   sym-list multi-run-terminals-list))
 
 (defun multi-run-copy-one-file-sudo (source-file destination-file-or-directory &optional non-root)
   "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals.  Copy with sudo if NON-ROOT is false."
