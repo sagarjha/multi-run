@@ -23,7 +23,7 @@
 
 ;;; Commentary:
 
-;; This contains helper functions for multi-run.el. See that file for the user interface.
+;; This contains helper functions for multi-run.el.  See that file for the user interface.
 
 ;; See the full documentation on https://www.github.com/sagarjha/multi-run.
 
@@ -32,55 +32,23 @@
 (defvar multi-run-timers-list nil
   "Internal list of timers to cancel when multi-run-kill-all-timers is called.")
 
-(defun multi-run-match-term-type-p (multi-run-term-type)
-  "Return non-nil if MULTI-RUN-TERM-TYPE is one of the supported terminal types."
-  (memq multi-run-term-type '(eshell shell ansi-term term multi-term)))
-
 (defun multi-run-get-buffer-name (term-num)
   "Return the name of the buffer for a given terminal number TERM-NUM."
-  (let ((term-num-in-str (number-to-string term-num)))
-    (pcase multi-run-term-type
-      ('eshell (concat "eshell<" term-num-in-str ">"))
-      ('shell (concat "shell<" term-num-in-str ">"))
-      ('ansi-term (concat "ansi-term<" term-num-in-str ">"))
-      ('term (concat "term<" term-num-in-str ">"))
-      ('multi-term (concat "terminal<" term-num-in-str ">"))
-      (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term")))))
-
-(defun multi-run-get-input-function ()
-  "Return the name of the function that will run the input on the terminal."
-  (pcase multi-run-term-type
-    ('eshell 'eshell-send-input)
-    ('shell 'comint-send-input)
-    ((pred multi-run-match-term-type-p) 'term-send-input)
-    (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term"))))
-
-(defun multi-run-get-new-input-point ()
-  "Move point to the latest prompt in the terminal buffer."
-  (pcase multi-run-term-type
-    ('eshell eshell-last-output-end)
-    ((pred multi-run-match-term-type-p) (process-mark (get-buffer-process (current-buffer))))
-    (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term"))))
+  (concat "eshell<" (number-to-string term-num) ">"))
 
 (defun multi-run-open-terminal (term-num)
   "Open terminal number TERM-NUM in a buffer if it's not already open.  In any case, switch to it."
   (unless (get-buffer (multi-run-get-buffer-name term-num))
     (progn
-      (pcase multi-run-term-type
-        ('eshell (eshell term-num))
-        ('shell (shell))
-        ('ansi-term (ansi-term "/bin/bash"))
-        ('term (term "/bin/bash"))
-        ('multi-term (multi-term))
-        (multi-run-term-type (error "Value of multi-run-term-type should be one of the following symbols: eshell, shell, ansi-term, term, multi-term")))
+      (eshell term-num)
       (rename-buffer (multi-run-get-buffer-name term-num)))))
 
 (defun multi-run-on-single-terminal (command term-num)
   "Run the command COMMAND on a single terminal with number TERM-NUM."
   (set-buffer (multi-run-get-buffer-name term-num))
-  (goto-char (multi-run-get-new-input-point))
+  (goto-char eshell-last-output-end)
   (insert command)
-  (funcall (multi-run-get-input-function)))
+  (eshell-send-input))
 
 (defun multi-run-on-terminals (command term-nums &optional delay)
   "Run the COMMAND on terminals in TERM-NUMS with an optional DELAY between running on successive terminals."

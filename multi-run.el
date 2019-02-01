@@ -36,15 +36,6 @@
   "Run commands in multiple terminal windows."
   :group 'terminals)
 
-(defcustom multi-run-term-type 'eshell
-  "Terminal type to run the commands on.")
-;; set multi-run-term-type to any of the supported terminals by running the appropriate expression from below
-;; (setq multi-run-term-type 'eshell)
-;; (setq multi-run-term-type 'shell)
-;; (setq multi-run-term-type 'ansi-term)
-;; (setq multi-run-term-type 'term)
-;; (setq multi-run-term-type 'multi-term)
-
 (defvar multi-run-terminals-list nil
   "List of terminals to run the command on.")
 
