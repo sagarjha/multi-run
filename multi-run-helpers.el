@@ -125,6 +125,12 @@
 	(source-files (reverse (cdr (reverse files)))))
     (mapc (lambda (source-file) (funcall copy-fun source-file destination-file-or-directory)) source-files)))
 
+(defun multi-run-get-working-directory ()
+  "Return the working directory relative to home.  Useful for multi-copy."
+  (let* ((working-directory (eshell/pwd))
+	 (dir-names (split-string working-directory "/" 't)))
+    (if (not (string-equal (car dir-names) "home")) (error "Not a child of home directory")
+      (seq-reduce (lambda (res dir-name) (concat res dir-name "/")) (cons "." (cdr (cdr dir-names))) ""))))
 
 (provide 'multi-run-helpers)
 ;;; multi-run-helpers.el ends here
