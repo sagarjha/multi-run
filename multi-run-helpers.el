@@ -102,9 +102,9 @@
 
 (defun multi-run-make-dict (hint-fun sym-list)
   "Create a dictionary of terminal symbol names according to HINT-FUN and symbols from SYM-LIST."
-  (mapcar* (lambda (symbol num) (list :name symbol
-				      :buffer (funcall hint-fun num)))
-	   sym-list multi-run-terminals-list))
+  (cl-mapcar (lambda (symbol num) (list :name symbol
+					:buffer (funcall hint-fun num)))
+	     sym-list multi-run-terminals-list))
 
 (defun multi-run-copy-one-file-sudo (source-file destination-file-or-directory &optional non-root)
   "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals.  Copy with sudo if NON-ROOT is false."
