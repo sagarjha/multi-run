@@ -102,7 +102,7 @@
   "Establish ssh connections in the terminals with the help of user-defined variables."
   (multi-run-on-terminals (lambda (x) (concat "ssh " (if multi-run-ssh-username
 							 (concat multi-run-ssh-username "@") "")
-					      (elt multi-run-hostnames-list (- x 1)))) multi-run-terminals-list))
+					      (elt multi-run-hostnames-list (1- x)))) multi-run-terminals-list))
 
 (defun multi-run-find-remote-files-sudo (file-path &optional window-batch non-root)
   "Open file specified by FILE-PATH for all terminals and display them on the screen with WINDOW-BATCH number of them in one single vertical slot.  Open with sudo if NON-ROOT is false."
@@ -111,18 +111,18 @@
 	 (window-batch (if window-batch window-batch (calculate-window-batch num-terminals)))
 	 (master-buffer-name (buffer-name))
 	 (master-buffer-symbol (make-symbol "master"))
-	 (buffer-vector (vconcat (mapcar
-				  (lambda (x) (find-file (concat "/ssh:"
-								 (when multi-run-ssh-username
-								   (concat multi-run-ssh-username "@"))
-								 (elt multi-run-hostnames-list (- x 1))
-								 (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
-								 ":" file-path)))
-				  multi-run-terminals-list)))
+	 (buffer-list (mapcar
+		       (lambda (x) (cons x (find-file (concat "/ssh:"
+							      (when multi-run-ssh-username
+								(concat multi-run-ssh-username "@"))
+							      (elt multi-run-hostnames-list (1- x))
+							      (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (1- x))))
+							      ":" file-path))))
+		       multi-run-terminals-list))
 	 (sym-list (multi-run-make-symbols "file"))
 	 (buffer-dict (cons (list :name master-buffer-symbol
 				  :buffer master-buffer-name)
-			    (multi-run-make-dict (lambda (cnt) (aref buffer-vector (1- cnt))) sym-list)))
+			    (multi-run-make-dict (lambda (term-num) (cdr (assoc term-num buffer-list))) sym-list)))
 	 (internal-recipe (multi-run-make-internal-recipe num-terminals window-batch (vconcat sym-list)))
 	 (overall-recipe `(- (:upper-size-ratio 0.9)
 			     ,internal-recipe ,master-buffer-symbol)))
