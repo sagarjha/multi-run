@@ -108,11 +108,17 @@
 
 (defun multi-run-copy-one-file-sudo (source-file destination-file-or-directory &optional non-root)
   "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals.  Copy with sudo if NON-ROOT is false."
-  (mapc (lambda (x) (copy-file source-file (concat "/ssh:" (when multi-run-ssh-username
-							     (concat multi-run-ssh-username "@"))
-						   (elt multi-run-hostnames-list (- x 1))
-						   (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
-						   ":" destination-file-or-directory) 't))
+  (mapc (lambda (x) (condition-case err (copy-file source-file (concat "/ssh:" (when multi-run-ssh-username
+										 (concat multi-run-ssh-username "@"))
+								       (elt multi-run-hostnames-list (- x 1))
+								       (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
+								       ":" destination-file-or-directory) 't)
+		      (file-missing (signal (car err) (cdr err)))
+		      (file-error (if (string-prefix-p "Couldn’t write region to" (error-message-string err))
+				      (message "Either the destination directory does not end with a slash (/), does not exist on remote nodes  or you need sudo permissions")
+				    (print (error-message-string err)))
+				  (signal (car err) (cdr err)))
+		      (error (print err))))
 	multi-run-terminals-list))
 
 (defun multi-run-copy-one-file (source-file destination-file-or-directory)
