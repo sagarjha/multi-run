@@ -1,6 +1,6 @@
 ;;; multi-run-helpers.el --- Helper functions for multi-run.el  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015-2018  Sagar Jha
+;; Copyright (C) 2015-2019  Sagar Jha
 
 ;; Author: Sagar Jha
 ;; URL: https://www.github.com/sagarjha/multi-run
@@ -29,12 +29,29 @@
 
 ;;; Code:
 
-(defvar multi-run-timers-list nil
-  "Internal list of timers to cancel when multi-run-kill-all-timers is called.")
+(require 'multi-run-vars)
+
+(defgroup multi-run nil
+  "Run commands in multiple terminal windows."
+  :group 'terminals)
 
 (defun multi-run-get-buffer-name (term-num)
   "Return the name of the buffer for a given terminal number TERM-NUM."
   (concat "eshell<" (number-to-string term-num) ">"))
+
+(defun multi-run-get-working-directory ()
+  "Return the working directory relative to home.  Useful for multi-copy."
+  (let* ((working-directory (eshell/pwd))
+	 (dir-names (split-string working-directory "/" 't)))
+    (if (not (string-equal (car dir-names) "home")) (error "Not a child of home directory")
+      (seq-reduce (lambda (res dir-name) (concat res dir-name "/")) (cons "." (cdr (cdr dir-names))) ""))))
+
+(defun multi-run-get-full-remote-path (file-path term-num root)
+  "Return the full path on the remote node for FILE-PATH specified by TERM-NUM.  Add sudo if ROOT is t."
+  (concat "/ssh:" (when multi-run-ssh-username (concat multi-run-ssh-username "@"))
+	  (elt multi-run-hostnames-list (1- term-num))
+	  (when root (concat "|sudo:" (elt multi-run-hostnames-list (1- term-num))))
+	  ":" file-path))
 
 (defun multi-run-open-terminal (term-num)
   "Open terminal number TERM-NUM in a buffer if it's not already open.  In any case, switch to it."
@@ -130,13 +147,6 @@
   (let ((destination-file-or-directory (car (last files)))
 	(source-files (reverse (cdr (reverse files)))))
     (mapc (lambda (source-file) (funcall copy-fun source-file destination-file-or-directory)) source-files)))
-
-(defun multi-run-get-working-directory ()
-  "Return the working directory relative to home.  Useful for multi-copy."
-  (let* ((working-directory (eshell/pwd))
-	 (dir-names (split-string working-directory "/" 't)))
-    (if (not (string-equal (car dir-names) "home")) (error "Not a child of home directory")
-      (seq-reduce (lambda (res dir-name) (concat res dir-name "/")) (cons "." (cdr (cdr dir-names))) ""))))
 
 (provide 'multi-run-helpers)
 ;;; multi-run-helpers.el ends here
