@@ -145,7 +145,7 @@
 (defun multi-run-copy-generic (copy-fun &rest files)
   "Internal function.  Call COPY-FUN after parsing FILES."
   (let ((destination-file-or-directory (car (last files)))
-	(source-files (reverse (cdr (reverse files)))))
+	(source-files (flatten-list (reverse (cdr (reverse files))))))
     (mapc (lambda (source-file) (funcall copy-fun source-file destination-file-or-directory)) source-files)))
 
 (provide 'multi-run-helpers)
