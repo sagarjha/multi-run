@@ -45,5 +45,8 @@
 (defvar multi-run-timers-list nil
   "Internal list of timers to cancel when multi-run-kill-all-timers is called.")
 
+(defvar multi-run-buffers-assoc-list nil
+  "List of buffers opened by the most recent multi-run-find-remote-files.")
+
 (provide 'multi-run-vars)
 ;;; multi-run-vars.el ends here

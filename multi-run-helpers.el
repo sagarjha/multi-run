@@ -60,6 +60,21 @@
       (eshell term-num)
       (rename-buffer (multi-run-get-buffer-name term-num)))))
 
+(defun multi-run-display-buffers (master-buffer-name num-buffers window-batch symbol-prefix hint-fun)
+  "Display nicely the MASTER-BUFFER-NAME and NUM-BUFFERS number of buffers with WINDOW-BATCH number of them in a single vertical slot, symbols constructed from SYMBOL-PREFIX and name given by calling HINT-FUN using `wlf:layout'."
+  (let* ((master-buffer-symbol (make-symbol "master"))
+	 (sym-list (multi-run-make-symbols symbol-prefix))
+	 (buffer-dict (cons (list :name master-buffer-symbol
+				  :buffer master-buffer-name)
+			    (multi-run-make-dict hint-fun sym-list)))
+	 (internal-recipe (multi-run-make-internal-recipe num-buffers window-batch (vconcat sym-list)))
+	 (overall-recipe `(- (:upper-size-ratio 0.9)
+			     ,internal-recipe ,master-buffer-symbol)))
+    (wlf:layout
+     overall-recipe
+     buffer-dict)
+    (select-window (get-buffer-window master-buffer-name))))
+
 (defun multi-run-on-single-terminal (command term-num)
   "Run the command COMMAND on a single terminal with number TERM-NUM."
   (set-buffer (multi-run-get-buffer-name term-num))
@@ -88,8 +103,7 @@
 
 (defun calculate-window-batch (num-terminals)
   "Calculate the window batch parameters for displaying NUM-TERMINALS."
-  (round (sqrt num-terminals))
-  )
+  (round (sqrt num-terminals)))
 
 (defun multi-run-make-vertical-or-horizontal-pane (num-terminals offset sym-vec)
   "Helper function for multi-run-configure-terminals.  Create NUM-TERMINALS number of windows with buffer names given by OFFSET into SYM-VEC in a single vertical pane."
@@ -115,7 +129,7 @@
 
 (defun multi-run-make-symbols (hint)
   "Create unique symbols for the terminals with common prefix HINT."
-  (mapcar (lambda (num) (make-symbol (concat hint (number-to-string num)))) multi-run-terminals-list))
+  (mapcar (lambda (term-num) (make-symbol (concat hint (number-to-string term-num)))) multi-run-terminals-list))
 
 (defun multi-run-make-dict (hint-fun sym-list)
   "Create a dictionary of terminal symbol names according to HINT-FUN and symbols from SYM-LIST."
@@ -125,17 +139,17 @@
 
 (defun multi-run-copy-one-file-sudo (source-file destination-file-or-directory &optional non-root)
   "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals.  Copy with sudo if NON-ROOT is false."
-  (mapc (lambda (x) (condition-case err (copy-file source-file (concat "/ssh:" (when multi-run-ssh-username
-										 (concat multi-run-ssh-username "@"))
-								       (elt multi-run-hostnames-list (- x 1))
-								       (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- x 1))))
-								       ":" destination-file-or-directory) 't)
-		      (file-missing (signal (car err) (cdr err)))
-		      (file-error (if (string-prefix-p "Couldn’t write region to" (error-message-string err))
-				      (message "Either the destination directory does not end with a slash (/), does not exist on remote nodes  or you need sudo permissions")
-				    (print (error-message-string err)))
-				  (signal (car err) (cdr err)))
-		      (error (print err))))
+  (mapc (lambda (term-num) (condition-case err (copy-file source-file (concat "/ssh:" (when multi-run-ssh-username
+											(concat multi-run-ssh-username "@"))
+									      (elt multi-run-hostnames-list (- term-num 1))
+									      (when (not non-root) (concat "|sudo:" (elt multi-run-hostnames-list (- term-num 1))))
+									      ":" destination-file-or-directory) 't)
+			     (file-missing (signal (car err) (cdr err)))
+			     (file-error (if (string-prefix-p "Couldn’t write region to" (error-message-string err))
+					     (message "Either the destination directory does not end with a slash (/), does not exist on remote nodes  or you need sudo permissions")
+					   (print (error-message-string err)))
+					 (signal (car err) (cdr err)))
+			     (error (print err))))
 	multi-run-terminals-list))
 
 (defun multi-run-copy-one-file (source-file destination-file-or-directory)
