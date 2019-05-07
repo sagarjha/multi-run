@@ -111,13 +111,15 @@
 (defun multi-run-execute-command ()
   "Execute the command on all the files."
   (when multi-run-start
-    (unless (eq this-original-command 'eshell-send-input)
+    (unless (or (eq this-original-command 'multi-run-edit-files)
+		(eq this-original-command 'eshell-send-input))
       (if (eq this-original-command 'keyboard-quit)
 	  (multi-run-edit-files-quit)
 	(mapc (lambda (term-num) (multi-run-execute-on-single-buffer (cdr (assoc term-num multi-run-buffers-assoc-list)))) (cdr multi-run-terminals-list))))))
 
 (defun multi-run-edit-files (&optional window-batch)
   "Enable editing files opened by `multi-run-find-remote-files'.  Display the files on the frame with WINDOW-BATCH number of them in one single vertical slot."
+  (interactive)
   (let* ((master-buffer-name (buffer-name))
 	 (num-terminals (length multi-run-terminals-list))
 	 (window-batch (if window-batch window-batch (calculate-window-batch num-terminals))))
