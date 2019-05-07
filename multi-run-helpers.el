@@ -25,7 +25,7 @@
 
 ;; This contains helper functions for multi-run.el.  See that file for the user interface.
 
-;; See the full documentation on https://www.github.com/sagarjha/multi-run.
+;; See the full documentation at https://www.github.com/sagarjha/multi-run.
 
 ;;; Code:
 

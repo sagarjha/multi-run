@@ -1,4 +1,4 @@
-;;; multi-run.el --- Manage multiple terminals and run commands on them
+;;; multi-run.el --- Efficiently manage multiple remote nodes  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2015-2019  Sagar Jha
 
@@ -6,7 +6,7 @@
 ;; URL: https://www.github.com/sagarjha/multi-run
 ;; Package-Requires: ((emacs "24") (window-layout "1.4"))
 ;; Version: 1.0
-;; Keywords: tools, terminals
+;; Keywords: multiple shells, multi-run, remote nodes
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,9 +23,7 @@
 
 ;;; Commentary:
 
-;; The functions below are self-explanatory with the documentation string.
-
-;; See the full documentation on https://www.github.com/sagarjha/multi-run.
+;; See the full documentation at https://www.github.com/sagarjha/multi-run.
 
 ;;; Code:
 

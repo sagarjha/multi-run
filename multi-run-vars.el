@@ -1,4 +1,4 @@
-;;; multi-run-helpers.el --- Helper functions for multi-run.el  -*- lexical-binding: t; -*-
+;;; multi-run-vars.el --- Helper variables for multi-run.el  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015-2019  Sagar Jha
 
@@ -25,7 +25,7 @@
 
 ;; This contains helper variables for multi-run.el and multi-run-helpers.el.
 
-;; See the full documentation on https://www.github.com/sagarjha/multi-run.
+;; See the full documentation at https://www.github.com/sagarjha/multi-run.
 
 ;;; Code:
 
