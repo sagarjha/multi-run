@@ -156,10 +156,13 @@
   "Copy SOURCE-FILE to DESTINATION-FILE-OR-DIRECTORY at remote nodes for all terminals."
   (multi-run-copy-one-file-sudo source-file destination-file-or-directory 't))
 
+(defun multi-run-flatten (list)
+  (mapcan (lambda (x) (if (listp x) x (list x))) list))
+
 (defun multi-run-copy-generic (copy-fun &rest files)
   "Internal function.  Call COPY-FUN after parsing FILES."
   (let ((destination-file-or-directory (car (last files)))
-	(source-files (flatten-list (reverse (cdr (reverse files))))))
+	(source-files (multi-run-flatten (reverse (cdr (reverse files))))))
     (mapc (lambda (source-file) (funcall copy-fun source-file destination-file-or-directory)) source-files)))
 
 (provide 'multi-run-helpers)
